@@ -1,0 +1,89 @@
+INFO: [HLS 200-10] Running 'C:/Xilinx/Vitis_HLS/2020.2/bin/unwrapped/win64.o/vitis_hls.exe'
+INFO: [HLS 200-10] For user 'user' on host 'desktop-inv2pk8' (Windows NT_amd64 version 6.2) on Mon Jan 10 21:07:18 +0800 2022
+INFO: [HLS 200-10] In directory 'C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device'
+Sourcing Tcl script 'C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/MNISTInferenceDevice/MNIST/csynth.tcl'
+INFO: [HLS 200-1510] Running: open_project MNISTInferenceDevice 
+INFO: [HLS 200-10] Opening project 'C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/MNISTInferenceDevice'.
+INFO: [HLS 200-1510] Running: set_top test 
+INFO: [HLS 200-1510] Running: add_files MNIST.cpp 
+INFO: [HLS 200-10] Adding design file 'MNIST.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files MNIST.h 
+INFO: [HLS 200-10] Adding design file 'MNIST.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv1.bias.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv1.bias.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv1.weight.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv1.weight.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv2.bias.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv2.bias.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv2.weight.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv2.weight.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv3.bias.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv3.bias.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv3.weight.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv3.weight.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv4.bias.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv4.bias.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/conv4.weight.h 
+INFO: [HLS 200-10] Adding design file 'weight/conv4.weight.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/fc.bias.h 
+INFO: [HLS 200-10] Adding design file 'weight/fc.bias.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight/fc.weight.h 
+INFO: [HLS 200-10] Adding design file 'weight/fc.weight.h' to the project
+INFO: [HLS 200-1510] Running: add_files weight2.h 
+INFO: [HLS 200-10] Adding design file 'weight2.h' to the project
+INFO: [HLS 200-1510] Running: add_files -tb tester.cpp -cflags -Wno-unknown-pragmas -csimflags -Wno-unknown-pragmas 
+INFO: [HLS 200-10] Adding test bench file 'tester.cpp' to the project
+INFO: [HLS 200-1510] Running: open_solution MNIST -flow_target vivado 
+INFO: [HLS 200-10] Opening solution 'C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/MNISTInferenceDevice/MNIST'.
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-10] Setting target device to 'xc7z020-clg400-1'
+INFO: [HLS 200-1505] Using flow_target 'vivado'
+Resolution: For help on HLS 200-1505 see www.xilinx.com/cgi-bin/docs/rdoc?v=2020.2;t=hls+guidance;d=200-1505.html
+INFO: [HLS 200-1510] Running: set_part xc7z020-clg400-1 
+INFO: [HLS 200-1510] Running: create_clock -period 10 -name default 
+INFO: [HLS 200-1510] Running: set_directive_top -name test test 
+INFO: [HLS 200-1510] Running: csynth_design 
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.194 seconds; current allocated memory: 220.022 MB.
+INFO: [HLS 200-10] Analyzing design file 'MNIST.cpp' ... 
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 2.151 seconds; current allocated memory: 220.328 MB.
+INFO: [HLS 200-777] Using interface defaults for 'Vivado' flow target.
+INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 5.99 seconds; current allocated memory: 222.610 MB.
+INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.194 seconds; current allocated memory: 222.611 MB.
+INFO: [HLS 200-10] Starting code transformations ...
+INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.198 seconds; current allocated memory: 223.533 MB.
+INFO: [HLS 200-10] Checking synthesizability ...
+INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.217 seconds; current allocated memory: 222.967 MB.
+WARNING: [XFORM 203-803] Dropped interface mode 'ap_auto' on 'c' (MNIST.cpp:11) as it is incompatible with its interface mode 's_axilite'.
+INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.343 seconds; current allocated memory: 242.979 MB.
+INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.323 seconds; current allocated memory: 234.636 MB.
+INFO: [HLS 200-10] Starting hardware synthesis ...
+INFO: [HLS 200-10] Synthesizing 'test' ...
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'test' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.244 seconds; current allocated memory: 234.829 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.209 seconds; current allocated memory: 234.933 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'test' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] Design contains AXI ports. Reset is fixed to synchronous and active low.
+INFO: [RTGEN 206-500] Setting interface mode on port 'test/a' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'test/b' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'test/c' to 's_axilite & ap_vld'.
+INFO: [RTGEN 206-500] Setting interface mode on function 'test' to 's_axilite & ap_ctrl_hs'.
+INFO: [RTGEN 206-100] Bundling port 'a', 'b', 'c' to AXI-Lite port control.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'test'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.241 seconds; current allocated memory: 235.189 MB.
+INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 2 seconds. CPU system time: 1 seconds. Elapsed time: 2.197 seconds; current allocated memory: 241.562 MB.
+INFO: [VHDL 208-304] Generating VHDL RTL for test.
+INFO: [VLOG 209-307] Generating Verilog RTL for test.
+INFO: [HLS 200-789] **** Estimated Fmax: 219.68 MHz
+INFO: [HLS 200-111] Finished Command csynth_design CPU user time: 5 seconds. CPU system time: 1 seconds. Elapsed time: 12.824 seconds; current allocated memory: 241.725 MB.
+INFO: [HLS 200-112] Total CPU user time: 10 seconds. Total CPU system time: 3 seconds. Total elapsed time: 17.775 seconds; peak allocated memory: 242.979 MB.
