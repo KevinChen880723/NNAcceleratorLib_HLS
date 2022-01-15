@@ -232,7 +232,6 @@ void Filter2DKernel(
 
 	// Process incoming stream of pixels, and stream pixels out
 	Filter2D(width, height, bias, coefs_stream, window_stream, output_stream, 0);
-    Filter2D()
 
 	// Write incoming stream of pixels and write them to global memory over AXI4 MM
 	WriteToMem(width, height, stride, output_stream, dst);
