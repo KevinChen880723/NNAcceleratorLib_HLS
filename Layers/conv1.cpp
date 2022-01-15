@@ -191,7 +191,7 @@ void Filter2D(
                     }
                     sum += pixel*(datatype)coeffs[row][col];
                 }
-            }
+            } 
 
             // Normalize result
             unsigned datatype outpix = MIN(MAX((int(factor * sum)+bias), 0), 255);
