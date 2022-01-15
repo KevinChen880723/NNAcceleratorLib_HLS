@@ -14,8 +14,10 @@
 * limitations under the License.
 */
 
+#include "ap_int.h"
 #include "hls_stream.h"
 #include "common.h"
+#include "MNIST.h"
 
 
 void ReadFromMem(
@@ -39,7 +41,6 @@ void ReadFromMem(
     }
 
     stride = (stride/64)*64; // Makes compiler see that stride is a multiple of 64, enables auto-widening
-    unsigned offset = 0;
     unsigned x = 0;
     read_image: for (int n = 0; n < height*stride; n++) {
         datatype pix = src[n];
@@ -48,19 +49,17 @@ void ReadFromMem(
      }
 }
 
-
 void WriteToMem(
-        unsigned short       width,
-        unsigned short       height,
-        unsigned short       stride,
+        unsigned short            width,
+        unsigned short            height,
+        unsigned short            stride,
         hls::stream<datatype>     &pixel_stream,
-        datatype             *dst)
+        datatype                  *dst)
 {
     assert(stride <= MAX_IMAGE_WIDTH);
     assert(height <= MAX_IMAGE_HEIGHT);
     assert(stride%64 == 0); 
     stride = (stride/64)*64; // Makes compiler see that stride is a multiple of 64, enables auto-widening
-    unsigned offset = 0;
     unsigned x = 0;
     write_image: for (int n = 0; n < height*stride; n++) {
         datatype pix = (x<width) ? pixel_stream.read() : 0;
@@ -69,16 +68,16 @@ void WriteToMem(
     }
 }
 
-
 struct window {
     datatype pix[FILTER_V_SIZE][FILTER_H_SIZE];
 };
 
 void Window2D(
-        unsigned short        width,
-        unsigned short        height,
-        hls::stream<datatype>      &pixel_stream,
-        hls::stream<window>  &window_stream)
+        unsigned short          width,
+        unsigned short          height,
+        hls::stream<datatype>   &pixel_stream,
+        hls::stream<window>     &window_stream,
+        ap_int<1>               do_padding)
 {
     // Line buffers - used to store [FILTER_V_SIZE-1] entire lines of pixels
     datatype LineBuffer[FILTER_V_SIZE-1][MAX_IMAGE_WIDTH];
@@ -90,7 +89,9 @@ void Window2D(
     window Window;
 
     unsigned col_ptr = 0;
-    unsigned ramp_up = width*((FILTER_V_SIZE-1)/2)+(FILTER_H_SIZE-1)/2;
+    // Initializing time to fill the data that raquired by a window into the line buffer
+    // In the official code, because of the zero padding this is the time to get half the data in the first window
+    unsigned ramp_up = (do_padding == true) ? width*((FILTER_V_SIZE-1)/2)+(FILTER_H_SIZE-1)/2: width*(FILTER_V_SIZE-1)+(FILTER_H_SIZE-1);
     unsigned num_pixels = width*height;
     unsigned num_iterations = num_pixels + ramp_up;
 
@@ -135,13 +136,14 @@ void Window2D(
 }
 
 void Filter2D(
-        unsigned short       width,
-        unsigned short       height,
-        float                factor,
-        short                bias,
-        hls::stream<datatype>   &coeff_stream,
-        hls::stream<window> &window_stream,
-		hls::stream<datatype>     &pixel_stream )
+        unsigned short              width,
+        unsigned short              height,
+        float                       factor,
+        short                       bias,
+        hls::stream<datatype>      &coeff_stream,
+        hls::stream<window>        &window_stream,
+		hls::stream<datatype>      &pixel_stream,
+        ap_int<1>                   do_padding)
 {
     assert(width  <= MAX_IMAGE_WIDTH);
     assert(height <= MAX_IMAGE_HEIGHT);
@@ -157,6 +159,10 @@ void Filter2D(
             coeffs[i][j] = coeff_stream.read();
         }
     }
+
+    // If we don't want to pad the image, the output size will be shinked
+    height = (do_padding == true)? height: height-FILTER_V_SIZE+1;
+    width = (do_padding == true)? width: width-FILTER_H_SIZE+1;
 
     // Process the incoming stream of pixel windows
     apply_filter: for (int y = 0; y < height; y++)
@@ -177,7 +183,8 @@ void Filter2D(
                     int xoffset = (x+col-(FILTER_H_SIZE/2));
                     int yoffset = (y+row-(FILTER_V_SIZE/2));
                     // Deal with boundary conditions : clamp pixels to 0 when outside of image
-                    if ( (xoffset<0) || (xoffset>=width) || (yoffset<0) || (yoffset>=height) ) {
+                    // Pad zero to the pixels that over the image
+                    if ( do_padding==1 && ((xoffset<0) || (xoffset>=width) || (yoffset<0) || (yoffset>=height)) ) {
                         pixel = 0;
                     } else {
                         pixel = w.pix[row][col];
@@ -199,15 +206,15 @@ void Filter2D(
 extern "C" {
 
 void Filter2DKernel(
-        const datatype           coeffs[256],
-        float                    factor,
-        short                    bias,
+        const char               coeffs[9],
+        const datatype           Wconv1[layer2CnannelNum][layer1CnannelNum][3][3],
+        short                    Bconv1[layer2CnannelNum],
         unsigned short           width,
         unsigned short           height,
         unsigned short           stride,
         const datatype  src[MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT],
         datatype        dst[MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT])
-  {
+    {
 
 #pragma HLS DATAFLOW
 
@@ -221,14 +228,15 @@ void Filter2DKernel(
     ReadFromMem(width, height, stride, coeffs, coefs_stream, src, pixel_stream);
 
     // Read incoming pixels and form valid HxV windows
-    Window2D(width, height, pixel_stream, window_stream);
+    Window2D(width, height, pixel_stream, window_stream, 0);
 
 	// Process incoming stream of pixels, and stream pixels out
-	Filter2D(width, height, factor, bias, coefs_stream, window_stream, output_stream);
+	Filter2D(width, height, bias, coefs_stream, window_stream, output_stream, 0);
+    Filter2D()
 
 	// Write incoming stream of pixels and write them to global memory over AXI4 MM
 	WriteToMem(width, height, stride, output_stream, dst);
 
-  }
+    }
 
 }
