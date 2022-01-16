@@ -23,15 +23,12 @@
 void ReadFromMem(
         unsigned short            width,
         unsigned short            height,
-        unsigned short            stride,
         datatype                  *coeffs,
         hls::stream<datatype>     &coeff_stream,
         const datatype            src,
         hls::stream<datatype>     &pixel_stream )
 {
-    assert(stride <= MAX_IMAGE_WIDTH);
     assert(height <= MAX_IMAGE_HEIGHT);
-    assert(stride%64 == 0);
 
     unsigned num_coefs = FILTER_V_SIZE*FILTER_H_SIZE;
     unsigned num_coefs_padded = (((num_coefs-1)/64)+1)*64; // Make sure number of reads of multiple of 64, enables auto-widening
@@ -40,31 +37,22 @@ void ReadFromMem(
         if (i<num_coefs) coeff_stream.write( coef );
     }
 
-    stride = (stride/64)*64; // Makes compiler see that stride is a multiple of 64, enables auto-widening
-    unsigned x = 0;
-    read_image: for (int n = 0; n < height*stride; n++) {
+    read_image: for (int n = 0; n < height*width; n++) {
         datatype pix = src[n];
         if (x<width) pixel_stream.write( pix );
-        if (x==(stride-1)) x=0; else x++;
     }
 }
 
 void WriteToMem(
         unsigned short            width,
         unsigned short            height,
-        unsigned short            stride,
         hls::stream<datatype>     &pixel_stream,
         datatype                  *dst)
 {
-    assert(stride <= MAX_IMAGE_WIDTH);
     assert(height <= MAX_IMAGE_HEIGHT);
-    assert(stride%64 == 0); 
-    stride = (stride/64)*64; // Makes compiler see that stride is a multiple of 64, enables auto-widening
-    unsigned x = 0;
-    write_image: for (int n = 0; n < height*stride; n++) {
+    write_image: for (int n = 0; n < height*width; n++) {
         datatype pix = (x<width) ? pixel_stream.read() : 0;
         dst[n] = pix;
-        if (x==(stride-1)) x=0; else x++;
     }
 }
 
@@ -214,7 +202,6 @@ void Filter2DKernel(
         datatype                 Bconv,
         unsigned short           width,
         unsigned short           height,
-        unsigned short           stride,
         hls::stream<datatype>    input,
         hls::stream<datatype>    output)
     {
@@ -227,7 +214,7 @@ void Filter2DKernel(
     hls::stream<datatype,64>     output_stream;
 
 	// Read image data from global memory over AXI4 MM, and stream pixels out
-    ReadFromMem(width, height, stride, Wconv, coefs_stream, src, pixel_stream);
+    ReadFromMem(width, height, Wconv, coefs_stream, src, pixel_stream);
 
     // Read incoming pixels and form valid HxV windows
     Window2D(width, height, pixel_stream, window_stream, 0);
@@ -236,7 +223,7 @@ void Filter2DKernel(
 	Filter2D(width, height, bias, coefs_stream, window_stream, output_stream, 0);
 
 	// Write incoming stream of pixels and write them to global memory over AXI4 MM
-	WriteToMem(width, height, stride, output_stream, dst);
+	WriteToMem(width, height, output_stream, dst);
 
     }
 
@@ -247,7 +234,6 @@ void conv1(
         datatype                 Bconv[layer2CnannelNum],
         unsigned short           width,
         unsigned short           height,
-        unsigned short           stride,
         hls::stream<datatype>    input,
         hls::stream<datatype>    output)
 {
