@@ -46,7 +46,7 @@ void ReadFromMem(
         datatype pix = src[n];
         if (x<width) pixel_stream.write( pix );
         if (x==(stride-1)) x=0; else x++;
-     }
+    }
 }
 
 void WriteToMem(
@@ -193,8 +193,9 @@ void Filter2D(
                 }
             } 
 
-            // Normalize result
-            unsigned datatype outpix = MIN(MAX((int(factor * sum)+bias), 0), 255);
+            datatype outpix = sum+bias;
+            // // Normalize result
+            // unsigned datatype outpix = MIN(MAX((int(factor * sum)+bias), 0), 255);
 
             // Write the output pixel
             pixel_stream.write(outpix);
@@ -205,17 +206,18 @@ void Filter2D(
 
 extern "C" {
 
+/*
+ * A module used for executing one channel convolution
+ */
 void Filter2DKernel(
-        const char               coeffs[9],
-        const datatype           Wconv1[layer2CnannelNum][layer1CnannelNum][3][3],
-        short                    Bconv1[layer2CnannelNum],
+        datatype                 *Wconv,
+        datatype                 Bconv,
         unsigned short           width,
         unsigned short           height,
         unsigned short           stride,
-        const datatype  src[MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT],
-        datatype        dst[MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT])
+        hls::stream<datatype>    input,
+        hls::stream<datatype>    output)
     {
-
 #pragma HLS DATAFLOW
 
 	// Stream of pixels from kernel input to filter, and from filter to output
@@ -225,7 +227,7 @@ void Filter2DKernel(
     hls::stream<datatype,64>     output_stream;
 
 	// Read image data from global memory over AXI4 MM, and stream pixels out
-    ReadFromMem(width, height, stride, coeffs, coefs_stream, src, pixel_stream);
+    ReadFromMem(width, height, stride, Wconv, coefs_stream, src, pixel_stream);
 
     // Read incoming pixels and form valid HxV windows
     Window2D(width, height, pixel_stream, window_stream, 0);
@@ -238,4 +240,19 @@ void Filter2DKernel(
 
     }
 
+}
+
+void conv1(
+        datatype                 Wconv[layer2CnannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
+        datatype                 Bconv[layer2CnannelNum],
+        unsigned short           width,
+        unsigned short           height,
+        unsigned short           stride,
+        hls::stream<datatype>    input,
+        hls::stream<datatype>    output)
+{
+    ap_int<16> channel_o = 0;
+    for (channel_o = 0; channel_o < layer2CnannelNum; channel_o++){
+        Filter2DKernel()
+    }
 }
