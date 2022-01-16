@@ -14,11 +14,7 @@
 * limitations under the License.
 */
 
-#include "ap_int.h"
-#include "hls_stream.h"
-#include "common.h"
-#include "MNIST.h"
-
+#include "conv1.h"
 
 void ReadFromMem(
         unsigned short            width,
@@ -39,19 +35,6 @@ void ReadFromMem(
     read_image: for (int n = 0; n < height*width; n++) {
         datatype pix = input_stream.read();
         pixel_stream.write( pix );
-    }
-}
-
-void WriteToMem(
-        unsigned short            width,
-        unsigned short            height,
-        hls::stream<datatype>     &pixel_stream,
-        datatype                  *dst)
-{
-    assert(height <= MAX_IMAGE_HEIGHT);
-    write_image: for (int n = 0; n < height*width; n++) {
-        datatype pix = (x<width) ? pixel_stream.read() : 0;
-        dst[n] = pix;
     }
 }
 
