@@ -20,6 +20,8 @@ class MyDataset(Dataset):
             self.trainData = Data[50000:]
 
     def __getitem__(self, index):
+        # self.trainData[index]有兩個資料，[0]代表PIL影像，[1]代表標記資料。
+        # 訓練模型時使用的資料沒有經過正規化，向素質介於0、255之間。
         img = np.array(self.trainData[index][0])
         img = torch.Tensor(img).reshape((1, *img.shape))
         lbl = torch.zeros(10)
@@ -42,14 +44,76 @@ class Network(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x1):
-        x = self.relu(self.conv1(x1))
+        generateTest = False
+        if generateTest:
+            folder_name = "./hlsTest_float_folder"
+            if not os.path.isdir(folder_name):
+                os.mkdir(folder_name)
+
+            with open(os.path.join(folder_name, "input.txt"), "w") as file:
+                for data in x1[0][0].view(x1.shape[1]*x1.shape[2]*x1.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
+        x = self.conv1(x1)
+        if generateTest:
+            with open(os.path.join(folder_name, "conv1_output.txt"), "w") as file:
+                for data in x[0][0].view(x.shape[2]*x.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
+        x = self.relu(x)
+        if generateTest:
+            with open(os.path.join(folder_name, "relu(conv1_output).txt"), "w") as file:
+                for data in x[0][0].view(x.shape[2]*x.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
         x = self.relu(self.conv2(x))
+        if generateTest:
+            with open(os.path.join(folder_name, "relu(conv2_output).txt"), "w") as file:
+                for data in x[0][0].view(x.shape[2]*x.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
         x = self.pool(x)
+        if generateTest:
+            with open(os.path.join(folder_name, "pool1_output.txt"), "w") as file:
+                for data in x[0][0].view(x.shape[2]*x.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
         x = self.relu(self.conv3(x))
+        if generateTest:
+            with open(os.path.join(folder_name, "relu(conv3_output).txt"), "w") as file:
+                for data in x[0][0].view(x.shape[2]*x.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
         x = self.relu(self.conv4(x))
+        if generateTest:
+            with open(os.path.join(folder_name, "relu(conv4_output).txt"), "w") as file:
+                for data in x[0][0].view(x.shape[2]*x.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
         x = self.pool(x)
+        if generateTest:
+            with open(os.path.join(folder_name, "pool2_output.txt"), "w") as file:
+                for data in x[0][0].view(x.shape[2]*x.shape[3]):
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
         x = x.view(-1, x.shape[1]*x.shape[2]*x.shape[3])
-        x = self.softmax(self.fc(x))
+        x = self.fc(x)
+        if generateTest:
+            with open(os.path.join(folder_name, "fc_output.txt"), "w") as file:
+                for data in x[0]:
+                    file.write("{}\n".format(float(data.data)))
+            file.close()
+
+        x = self.softmax(x)
+
         return x
 
 class Trainer:
@@ -110,7 +174,7 @@ class Trainer:
 
 def train():
     logging.basicConfig(level=logging.DEBUG) 
-    writer = SummaryWriter()
+    # writer = SummaryWriter()
     trainer = Trainer()
     lowestLoss = 1000000
     for epoch in range(30):
@@ -120,13 +184,13 @@ def train():
         val_loss, accuracy = trainer.val()
         logging.info("Validation loss: {}".format(val_loss))
         logging.info("Validation accuracy: {}%\n".format(accuracy))
-        writer.add_scalar("Loss/train", train_loss, epoch)
-        writer.add_scalar("Loss/val", val_loss, epoch)
-        writer.add_scalar("Accuracy/val", accuracy, epoch)
-        if val_loss < lowestLoss:
-            lowestLoss = val_loss
-            trainer.saveModel(epoch=epoch, loss=val_loss)
-    writer.close()
+        # writer.add_scalar("Loss/train", train_loss, epoch)
+        # writer.add_scalar("Loss/val", val_loss, epoch)
+        # writer.add_scalar("Accuracy/val", accuracy, epoch)
+        # if val_loss < lowestLoss:
+        #     lowestLoss = val_loss
+        #     trainer.saveModel(epoch=epoch, loss=val_loss)
+    # writer.close()
 
 if __name__ == "__main__":
     train()
