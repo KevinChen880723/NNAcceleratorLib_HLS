@@ -14,43 +14,37 @@
 * limitations under the License.
 */
 
-#include "conv1.h"
+#include "../include/conv1.h"
 
 void ReadFromMem(
         unsigned short            width,
         unsigned short            height,
-        datatype                  *weights,
-        hls::stream<datatype>     &input_stream,
-        hls::stream<datatype>     &coeff_stream,
-        hls::stream<datatype>     &pixel_stream )
+        const myDatatype                  weights[FILTER_V_SIZE*FILTER_H_SIZE],
+        hls::stream<myDatatype>     &input_stream,
+        hls::stream<myDatatype>     &coeff_stream,
+        hls::stream<myDatatype>     &pixel_stream )
 {
-    assert(height <= MAX_IMAGE_HEIGHT);
-
     unsigned short num_coefs = FILTER_V_SIZE*FILTER_H_SIZE;
     read_coefs: for (int i=0; i<num_coefs; i++) {
-        datatype coef = weights[i];
+        myDatatype coef = weights[i];
         coeff_stream.write( coef );
     }
 
     read_image: for (int n = 0; n < height*width; n++) {
-        datatype pix = input_stream.read();
+        myDatatype pix = input_stream.read();
         pixel_stream.write( pix );
     }
 }
 
-struct window {
-    datatype pix[FILTER_V_SIZE][FILTER_H_SIZE];
-};
-
 void Window2D(
         unsigned short          width,
         unsigned short          height,
-        hls::stream<datatype>   &pixel_stream,
+        hls::stream<myDatatype>   &pixel_stream,
         hls::stream<window>     &window_stream,
         ap_int<1>               do_padding)
 {
     // Line buffers - used to store [FILTER_V_SIZE-1] entire lines of pixels
-    datatype LineBuffer[FILTER_V_SIZE-1][MAX_IMAGE_WIDTH];
+    myDatatype LineBuffer[FILTER_V_SIZE-1][IMAGE_WIDTH];
 #pragma HLS ARRAY_PARTITION variable=LineBuffer dim=1 complete
 #pragma HLS DEPENDENCE variable=LineBuffer inter false
 #pragma HLS DEPENDENCE variable=LineBuffer intra false
@@ -65,16 +59,13 @@ void Window2D(
     unsigned num_pixels = width*height;
     unsigned num_iterations = num_pixels + ramp_up;
 
-    const unsigned max_iterations = MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT + MAX_IMAGE_WIDTH*((FILTER_V_SIZE-1)/2)+(FILTER_H_SIZE-1)/2;
-
     // Iterate until all pixels have been processed
     update_window: for (int n=0; n<num_iterations; n++)
     {
-#pragma HLS LOOP_TRIPCOUNT max=max_iterations
 #pragma HLS PIPELINE II=1
 
         // Read a new pixel from the input stream
-        datatype new_pixel = (n<num_pixels) ? pixel_stream.read() : 0;
+        myDatatype new_pixel = (n<num_pixels) ? pixel_stream.read() : 0;
 
         // Shift the window and add a column of new pixels from the line buffer
         for(int i = 0; i < FILTER_V_SIZE; i++) {
@@ -108,16 +99,13 @@ void Window2D(
 void Filter2D(
         unsigned short              width,
         unsigned short              height,
-        hls::stream<datatype>       &coeff_stream,
+        hls::stream<myDatatype>       &coeff_stream,
         hls::stream<window>         &window_stream,
-		hls::stream<datatype>       &output_stream,
+		hls::stream<myDatatype>       &output_stream,
         ap_int<1>                   do_padding)
 {
-    assert(width  <= MAX_IMAGE_WIDTH);
-    assert(height <= MAX_IMAGE_HEIGHT);
-
     // Filtering coefficients
-    datatype coeffs[FILTER_V_SIZE][FILTER_H_SIZE];
+    myDatatype coeffs[FILTER_V_SIZE][FILTER_H_SIZE];
 #pragma HLS ARRAY_PARTITION variable=coeffs complete dim=0
 
     // Load the coefficients into local storage
@@ -148,7 +136,7 @@ void Filter2D(
             {
                 for(int col=0; col<FILTER_H_SIZE; col++)
                 {
-                    datatype pixel;
+                    myDatatype pixel;
                     int xoffset = (x+col-(FILTER_H_SIZE/2));
                     int yoffset = (y+row-(FILTER_V_SIZE/2));
                     // Deal with boundary conditions : clamp pixels to 0 when outside of image
@@ -158,7 +146,7 @@ void Filter2D(
                     } else {
                         pixel = w.pix[row][col];
                     }
-                    sum += pixel*(datatype)coeffs[row][col];
+                    sum += pixel*(myDatatype)coeffs[row][col];
                 }
             } 
             // Write the output pixel
@@ -168,25 +156,22 @@ void Filter2D(
 }
 
 
-extern "C" {
-
 /*
  * A module used for executing one channel convolution
  */
 void Filter2DKernel(
-        datatype                 *Wconv,
+        const myDatatype                 Wconv[FILTER_V_SIZE*FILTER_H_SIZE],
         unsigned short           width_input,
         unsigned short           height_input,
-        hls::stream<datatype>    &input_stream,
-        hls::stream<datatype>    &output_stream)
+        hls::stream<myDatatype>    &input_stream,
+        hls::stream<myDatatype>    &output_stream)
     {
 #pragma HLS DATAFLOW
 
 	// Stream of pixels from kernel input to filter, and from filter to output
-    hls::stream<datatype,2>      coefs_stream;
-    hls::stream<datatype,2>      pixel_stream;
+    hls::stream<myDatatype,2>      coefs_stream;
+    hls::stream<myDatatype,2>      pixel_stream;
     hls::stream<window,3>        window_stream; // Set FIFO depth to 0 to minimize resources
-    // hls::stream<datatype,64>     output_stream;
 
 	// Read image data from global memory over AXI4 MM, and stream pixels out
     ReadFromMem(width_input, height_input, Wconv, coefs_stream, input_stream, pixel_stream);
@@ -196,23 +181,17 @@ void Filter2DKernel(
 
 	// Process incoming stream of pixels, and stream pixels out
 	Filter2D(width_input, height_input, coefs_stream, window_stream, output_stream, 0);
-
-	// // Write incoming stream of pixels and write them to global memory over AXI4 MM
-	// WriteToMem(width_input, height_input, output_stream, dst);
-
     }
 
-}
-
 void summation(
-        datatype                 bias,
+        myDatatype                 bias,
         unsigned short           width,
         unsigned short           height,
         unsigned short           num_channel,
-        hls::stream<datatype>    &ChannelOutput_stream,
-        hls::stream<datatype>    &OverallOutput_stream)
+        hls::stream<myDatatype>    &ChannelOutput_stream,
+        hls::stream<myDatatype>    &OverallOutput_stream)
 {
-    datatype outputFeature[height][width];
+    myDatatype outputFeature[height][width];
     for(int c = 0; c < num_channel; c++){
         for(int y = 0; y < height; y++){
             for(int x = 0; x < width; x++){
@@ -229,22 +208,21 @@ void summation(
 }
 
 void conv1(
-        datatype                 Wconv[layer2CnannelNum][layer1CnannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
-        datatype                 Bconv[layer2CnannelNum],
+		const myDatatype                 Wconv[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
+		const myDatatype                 Bconv[layer2ChannelNum],
         unsigned short           width_input,
         unsigned short           height_input,
-        hls::stream<datatype>    &input_stream,
-        hls::stream<datatype>    &OverallOutput_stream)
+        hls::stream<myDatatype>    &input_stream,
+        hls::stream<myDatatype>    &OverallOutput_stream)
 {
-    hls::stream<datatype> ChannelOutput_stream;
+    hls::stream<myDatatype> ChannelOutput_stream;
     unsigned short width_output   = width_input - FILTER_H_SIZE + 1;
     unsigned short height_output  = height_input - FILTER_V_SIZE + 1;
-    unsigned short channel_input  = layer1CnannelNum;
-    unsigned short channel_output = layer2CnannelNum;
-    datatype outputFeature[height][width];
+    unsigned short channel_input  = layer1ChannelNum;
+    unsigned short channel_output = layer2ChannelNum;
     
     // Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
-    for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++)){
+    for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
         // Execute convolution for a kernel
         for (int channel_num_i = 0; channel_num_i < channel_input; channel_num_i++){
             // Do convolution on every channels, then send the output stream to summation module
@@ -256,6 +234,6 @@ void conv1(
 }
 
 /*
- * æˆ‘ä¸å¤ªç¢ºå®šæœ€å¾Œä¸€å€‹Moduleä¸­çš„summation()è¦æ”¾åœ¨å›žåœˆå…§é‚„æ˜¯å¤–ï¼Œæ”¾åœ¨è£¡é¢æˆ‘æ€•æœƒæœ‰ä¸‰å€‹ä¸€æ¨£çš„ç¡¬é«” (æˆ‘è¦ä¸‰æ¬¡Filter2DKernel()éƒ½å°æ‡‰åˆ°åŒä¸€å€‹summation())ï¼Œæ”¾å¤–é¢ä¸çŸ¥é“æœƒä¸æœƒç­‰è¿´åœˆå…§å®¹çµæŸæ‰åŸ·è¡Œ?
- * æ„Ÿè¦ºæ”¾è£¡é¢æ‡‰è©²ä¸æœƒæœ‰ä¸‰å€‹ä¸€æ¨£çš„ç¡¬é«”ï¼Œå› ç‚ºæˆ‘æ²’æœ‰Unrollã€‚å¦‚æžœå®ƒè®Šæˆä¸‰å€‹ç¡¬é«”åŒæ­¥åŸ·è¡Œï¼Œæˆ‘å°±ä¸æœƒçŸ¥é“ä»–åŸ·è¡Œçš„é †åºæ˜¯æ€Žéº¼æ¨£ï¼Œsummation()è£¡é¢é è¨­ä¸€å±¤ä¸€å±¤è·‘çš„é †åºå°±ä¸ä¸€å®šå°äº†ã€‚
+ * ??‘ä?å¤ªç¢ºå?šæ?å¾Œä??‹Moduleä¸­ç?„summation()è¦æ”¾?œ¨??žå?ˆå…§??„æ˜¯å¤–ï?Œæ”¾?œ¨è£¡é¢??‘æ?•æ?ƒæ?‰ä?‰å?‹ä?æ¨???„ç¡¬é«? (??‘è?ä?‰æ¬¡Filter2DKernel()?ƒ½å°æ?‰åˆ°??Œä??‹summation())ï¼Œæ”¾å¤–é¢ä¸çŸ¥??“æ?ƒä?æ?ƒç?‰è¿´??ˆå…§å®¹ç?æ?Ÿæ?åŸ·è¡??
+ * ??Ÿè¦º?”¾è£¡é¢??‰è©²ä¸æ?ƒæ?‰ä?‰å?‹ä?æ¨???„ç¡¬é«”ï?Œå? ç‚º??‘æ?’æ?‰Unroll?‚å?‚æ?œå?ƒè?Šæ?ä?‰å?‹ç¡¬é«”å?Œæ­¥?Ÿ·è¡Œï?Œæ?‘å°±ä¸æ?ƒçŸ¥??“ä?–åŸ·è¡Œç?„é?†å?æ˜¯?Žéº¼æ¨?ï¼Œsummation()è£¡é¢??è¨­ä¸?å±¤ä?å±¤è?‘ç?„é?†å?å°±ä¸ä?å®šå?ä?†ã??
  */

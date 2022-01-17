@@ -3,52 +3,57 @@
 
 #include "ap_int.h"
 #include "hls_stream.h"
-#include "common.h"
-#include "MNIST.h"
+#include "../../common.h"
+
+struct window {
+    myDatatype pix[FILTER_V_SIZE][FILTER_H_SIZE];
+};
+
+
 void ReadFromMem(
         unsigned short            width,
         unsigned short            height,
-        datatype                  *weights,
-        hls::stream<datatype>     &input_stream,
-        hls::stream<datatype>     &coeff_stream,
-        hls::stream<datatype>     &pixel_stream );
+		const myDatatype                  weights[FILTER_V_SIZE*FILTER_H_SIZE],
+        hls::stream<myDatatype>     &input_stream,
+        hls::stream<myDatatype>     &coeff_stream,
+        hls::stream<myDatatype>     &pixel_stream );
 
 void Window2D(
         unsigned short          width,
         unsigned short          height,
-        hls::stream<datatype>   &pixel_stream,
+        hls::stream<myDatatype>   &pixel_stream,
         hls::stream<window>     &window_stream,
         ap_int<1>               do_padding);
 
 void Filter2D(
         unsigned short              width,
         unsigned short              height,
-        hls::stream<datatype>       &coeff_stream,
+        hls::stream<myDatatype>       &coeff_stream,
         hls::stream<window>         &window_stream,
-		hls::stream<datatype>       &output_stream,
+		hls::stream<myDatatype>       &output_stream,
         ap_int<1>                   do_padding);        
 
 void Filter2DKernel(
-        datatype                 *Wconv,
+        myDatatype                 *Wconv,
         unsigned short           width_input,
         unsigned short           height_input,
-        hls::stream<datatype>    &input_stream,
-        hls::stream<datatype>    &output_stream);
+        hls::stream<myDatatype>    &input_stream,
+        hls::stream<myDatatype>    &output_stream);
 
 void summation(
-        datatype                 bias,
+        myDatatype                 bias,
         unsigned short           width,
         unsigned short           height,
         unsigned short           num_channel,
-        hls::stream<datatype>    &ChannelOutput_stream,
-        hls::stream<datatype>    &OverallOutput_stream);
+        hls::stream<myDatatype>    &ChannelOutput_stream,
+        hls::stream<myDatatype>    &OverallOutput_stream);
 
 void conv1(
-        datatype                 Wconv[layer2CnannelNum][layer1CnannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
-        datatype                 Bconv[layer2CnannelNum],
+		const myDatatype                 Wconv[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
+		const myDatatype                 Bconv[layer2ChannelNum],
         unsigned short           width_input,
         unsigned short           height_input,
-        hls::stream<datatype>    &input_stream,
-        hls::stream<datatype>    &OverallOutput_stream);
+        hls::stream<myDatatype>    &input_stream,
+        hls::stream<myDatatype>    &OverallOutput_stream);
 
 #endif
