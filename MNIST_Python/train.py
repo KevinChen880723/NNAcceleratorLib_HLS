@@ -44,74 +44,14 @@ class Network(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x1):
-        generateTest = False
-        if generateTest:
-            folder_name = "./hlsTest_float_folder"
-            if not os.path.isdir(folder_name):
-                os.mkdir(folder_name)
-
-            with open(os.path.join(folder_name, "input.txt"), "w") as file:
-                for data in x1[0][0].view(x1.shape[1]*x1.shape[2]*x1.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
-        x = self.conv1(x1)
-        if generateTest:
-            with open(os.path.join(folder_name, "conv1_output.txt"), "w") as file:
-                for data in x[0][0].view(x.shape[2]*x.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
-        x = self.relu(x)
-        if generateTest:
-            with open(os.path.join(folder_name, "relu(conv1_output).txt"), "w") as file:
-                for data in x[0][0].view(x.shape[2]*x.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
+        x = self.relu(self.conv1(x1))
         x = self.relu(self.conv2(x))
-        if generateTest:
-            with open(os.path.join(folder_name, "relu(conv2_output).txt"), "w") as file:
-                for data in x[0][0].view(x.shape[2]*x.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
         x = self.pool(x)
-        if generateTest:
-            with open(os.path.join(folder_name, "pool1_output.txt"), "w") as file:
-                for data in x[0][0].view(x.shape[2]*x.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
         x = self.relu(self.conv3(x))
-        if generateTest:
-            with open(os.path.join(folder_name, "relu(conv3_output).txt"), "w") as file:
-                for data in x[0][0].view(x.shape[2]*x.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
         x = self.relu(self.conv4(x))
-        if generateTest:
-            with open(os.path.join(folder_name, "relu(conv4_output).txt"), "w") as file:
-                for data in x[0][0].view(x.shape[2]*x.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
         x = self.pool(x)
-        if generateTest:
-            with open(os.path.join(folder_name, "pool2_output.txt"), "w") as file:
-                for data in x[0][0].view(x.shape[2]*x.shape[3]):
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
         x = x.view(-1, x.shape[1]*x.shape[2]*x.shape[3])
         x = self.fc(x)
-        if generateTest:
-            with open(os.path.join(folder_name, "fc_output.txt"), "w") as file:
-                for data in x[0]:
-                    file.write("{}\n".format(float(data.data)))
-            file.close()
-
         x = self.softmax(x)
 
         return x

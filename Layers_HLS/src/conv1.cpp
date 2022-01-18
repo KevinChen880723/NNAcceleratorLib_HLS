@@ -32,6 +32,7 @@ void ReadFromMem(
 
     read_image: for (int n = 0; n < height*width; n++) {
         myDatatype pix = input_stream.read();
+        std::cout << "pix in ReadFromMem: " << pix << std::endl;
         pixel_stream.write( pix );
     }
 }
@@ -52,12 +53,13 @@ void Window2D(
     // Sliding window of [FILTER_V_SIZE][FILTER_H_SIZE] pixels
     window Window;
 
+    std::cout << "do_padding is: " << do_padding << std::endl;
     unsigned col_ptr = 0;
     // Initializing time to fill the data that raquired by a window into the line buffer
     // In the official code, because of the zero padding this is the time to get half the data in the first window
     unsigned ramp_up = (do_padding == 1) ? width*((FILTER_V_SIZE-1)/2)+(FILTER_H_SIZE-1)/2: width*(FILTER_V_SIZE-1)+(FILTER_H_SIZE-1);
-    unsigned num_pixels = width*height;
-    unsigned num_iterations = num_pixels + ramp_up;
+    unsigned num_out_pixels = (do_padding == 1) ? width*height: width*height;//(width - FILTER_H_SIZE + 1)*(height - FILTER_V_SIZE + 1);
+    unsigned num_iterations = num_out_pixels + ramp_up;
 
     // Iterate until all pixels have been processed
     update_window: for (int n=0; n<num_iterations; n++)
@@ -65,7 +67,8 @@ void Window2D(
 #pragma HLS PIPELINE II=1
 
         // Read a new pixel from the input stream
-        myDatatype new_pixel = (n<num_pixels) ? pixel_stream.read() : 0;
+        myDatatype new_pixel = (n<num_out_pixels) ? pixel_stream.read() : 0;
+        std::cout << "new_pixel in Window2D: " << new_pixel << std::endl;
 
         // Shift the window and add a column of new pixels from the line buffer
         for(int i = 0; i < FILTER_V_SIZE; i++) {
@@ -82,7 +85,7 @@ void Window2D(
         LineBuffer[FILTER_V_SIZE-2][col_ptr] = new_pixel;
 
         // Update the line buffer column pointer
-        if (col_ptr==(width-1)) {
+        if (col_ptr==(width - 1)) {
             col_ptr = 0;
         } else {
             col_ptr++;
@@ -90,7 +93,9 @@ void Window2D(
 
         // Write output only when enough pixels have been read the buffers and ramped-up
         if (n>=ramp_up) {
-            window_stream.write(Window);
+        	unsigned short col_idx = (n - ramp_up) % width;
+        	if (col_idx < width - FILTER_H_SIZE + 1)
+        		window_stream.write(Window);
         }
 
     }
@@ -113,6 +118,7 @@ void Filter2D(
         for (int j=0; j<FILTER_H_SIZE; j++) {
 #pragma HLS PIPELINE II=1
             coeffs[i][j] = coeff_stream.read();
+            std::cout << "coeffs[i][j] in Filter2D: " << coeffs[i][j] << std::endl;
         }
     }
 
@@ -129,6 +135,7 @@ void Filter2D(
 #pragma HLS PIPELINE II=1
             // Read a 2D window of pixels
             window w = window_stream.read();
+            std::cout << "window in Filter2D(" << y << ", " << x << ")" << std::endl;
 
             // Apply filter to the 2D window
             int sum = 0;
@@ -146,11 +153,19 @@ void Filter2D(
                     } else {
                         pixel = w.pix[row][col];
                     }
+
+            		std::cout << w.pix[row][col];
+            		if (col == FILTER_H_SIZE-1) std::cout << "\n" << std::endl;
+            		else std::cout << "\t";
+
                     sum += pixel*(myDatatype)coeffs[row][col];
                 }
             } 
             // Write the output pixel
             output_stream.write(sum);
+            std::cout << "------------------------------------------------------------------" << std::endl;
+            std::cout << "Sum in the window = " << sum << "\t<<" << y*width+x << ">>" << std::endl;
+            std::cout << "------------------------------------------------------------------" << std::endl;
         }
     }
 }
@@ -169,12 +184,12 @@ void Filter2DKernel(
 #pragma HLS DATAFLOW
 
 	// Stream of pixels from kernel input to filter, and from filter to output
-    hls::stream<myDatatype,2>      coefs_stream;
-    hls::stream<myDatatype,2>      pixel_stream;
-    hls::stream<window,3>        window_stream; // Set FIFO depth to 0 to minimize resources
+    hls::stream<myDatatype,2>      coefs_stream("coefs_stream");
+    hls::stream<myDatatype,2>      pixel_stream("pixel_stream");
+    hls::stream<window,3>        window_stream("window_stream"); // Set FIFO depth to 0 to minimize resources
 
 	// Read image data from global memory over AXI4 MM, and stream pixels out
-    ReadFromMem(width_input, height_input, Wconv, coefs_stream, input_stream, pixel_stream);
+    ReadFromMem(width_input, height_input, Wconv, input_stream, coefs_stream, pixel_stream);
 
     // Read incoming pixels and form valid HxV windows
     Window2D(width_input, height_input, pixel_stream, window_stream, 0);
@@ -202,6 +217,7 @@ void summation(
                         OverallOutput_stream.write(outputFeature[y][x] + bias);
                     }
                 }
+                std::cout << "outputFeature[" << y << "][" << x<< "] in summation: " << outputFeature[y][x] << std::endl;
             }
         }
     }
@@ -215,12 +231,20 @@ void conv1(
         hls::stream<myDatatype>    &input_stream,
         hls::stream<myDatatype>    &OverallOutput_stream)
 {
-    hls::stream<myDatatype> ChannelOutput_stream;
+//#pragma HLS interface ap_ctrl_none port=return
+//#pragma HLS DATAFLOW
+    hls::stream<myDatatype> ChannelOutput_stream("ChannelOutput_stream");
     unsigned short width_output   = width_input - FILTER_H_SIZE + 1;
     unsigned short height_output  = height_input - FILTER_V_SIZE + 1;
     unsigned short channel_input  = layer1ChannelNum;
     unsigned short channel_output = layer2ChannelNum;
-    
+//    std::cout << "The address of input_stream in conv1() is: " << &input_stream << std::endl;
+//    for(int i = 0; i < 784; i++){
+//    	myDatatype data = input_stream.read();
+//    	std::cout << "data in conv1: " << data << std::endl;
+//    	OverallOutput_stream.write(data);
+//    }
+
     // Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
     for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
         // Execute convolution for a kernel
