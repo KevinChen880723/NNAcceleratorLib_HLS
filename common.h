@@ -1,3 +1,5 @@
+#include "ap_fixed.h"
+
 #define IMAGE_WIDTH 28
 #define IMAGE_HEIGHT 28
 

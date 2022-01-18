@@ -138,7 +138,7 @@ void Filter2D(
             std::cout << "window in Filter2D(" << y << ", " << x << ")" << std::endl;
 
             // Apply filter to the 2D window
-            int sum = 0;
+            myDatatype sum = 0.0;
             for(int row=0; row<FILTER_V_SIZE; row++)
             {
                 for(int col=0; col<FILTER_H_SIZE; col++)
@@ -213,9 +213,9 @@ void summation(
                 if (c == 0) outputFeature[y][x] = ChannelOutput_stream.read();
                 else{
                     outputFeature[y][x] += ChannelOutput_stream.read();
-                    if (c == num_channel-1){
-                        OverallOutput_stream.write(outputFeature[y][x] + bias);
-                    }
+                }
+                if (c == num_channel-1){
+                    OverallOutput_stream.write(outputFeature[y][x] + bias);
                 }
                 std::cout << "outputFeature[" << y << "][" << x<< "] in summation: " << outputFeature[y][x] << std::endl;
             }
@@ -253,7 +253,7 @@ void conv1(
             Filter2DKernel(Wconv[channel_num_o][channel_num_i], width_input, height_input, input_stream, ChannelOutput_stream);
         }
         // Summation module sum the value in the same coordinate up then add by the bias
-        summation(Bconv[channel_num_o], width_input, height_input, channel_input, ChannelOutput_stream, OverallOutput_stream);
+        summation(Bconv[channel_num_o], width_output, height_output, channel_output, ChannelOutput_stream, OverallOutput_stream);
     }
 }
 
