@@ -1,6 +1,7 @@
 #include <hls_stream.h>
 #include "MNIST.h"
-
+//#include "./Layers_HLS/src/Conv2D.cpp"
+#include "./Layers_HLS/include/Conv2D.h"
 
 #ifndef __SYNTHESIS__
 //	#define PRINT
@@ -74,10 +75,11 @@ void MNIST(myDatatype *img, myDatatype *output){
 #pragma HLS interface m_axi depth=50 port=img
 #pragma HLS interface m_axi depth=50 port=output
 #pragma HLS dataflow
+	Conv2D<3, 3, 1, 10> conv1(28, 28, 26, 26);
 	myStream input_stream("input_stream");
 	myStream output_stream("output_stream");
 	readMemory(img, IMAGE_WIDTH, IMAGE_HEIGHT, input_stream);
-	conv1(Wconv1, Bconv1, 28, 28, input_stream, output_stream);
+	conv1(Wconv1, Bconv1, input_stream, output_stream);
 	WriteToMem(layer2ChannelNum, 26, 26, output_stream, output);
 	return;
 }

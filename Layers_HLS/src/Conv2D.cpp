@@ -14,21 +14,56 @@
 * limitations under the License.
 */
 
-#include "../include/conv1.h"
+#include "../include/Conv2D.h"
+#include "hls_stream.h"
 
 #ifndef __SYNTHESIS__
 //	#define PRINT
 #endif
-void ReadFromMem(
-        unsigned short            width,
-        unsigned short            height,
-        const myDatatype                  weights[FILTER_V_SIZE*FILTER_H_SIZE],
-        hls::stream<myDatatype>     &input_stream,
-        hls::stream<myDatatype>     &coeff_stream,
-        hls::stream<myDatatype>     &pixel_stream )
+
+//namespace YKHLS{
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+Conv2D<width_filter, height_filter, channel_input, channel_output>::Conv2D()
+{
+	width_input = 28;
+	height_input = 28;
+	width_output = 26;
+	height_output = 26;
+}
+
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+Conv2D<width_filter, height_filter, channel_input, channel_output>::Conv2D(
+			unsigned short 				width_input,
+			unsigned short 				height_input,
+			unsigned short 				width_output,
+			unsigned short 				height_output)
+{
+	width_input = width_input;
+	height_input = height_input;
+	width_output = width_output;
+	height_output = height_output;
+}
+
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+void Conv2D<width_filter, height_filter, channel_input, channel_output>::ReadFromMem(
+	        unsigned short            	width,
+	        unsigned short            	height,
+			const myDatatype            weights[height_filter*width_filter],
+	        hls::stream<myDatatype>     &input_stream,
+	        hls::stream<myDatatype>     &coeff_stream,
+	        hls::stream<myDatatype>     &pixel_stream )
 {
 #pragma HLS interface ap_ctrl_none port=return
-    unsigned short num_coefs = FILTER_V_SIZE*FILTER_H_SIZE;
+    unsigned short num_coefs = height_filter*width_filter;
     read_coefs: for (int i=0; i<num_coefs; i++) {
         myDatatype coef = weights[i];
         coeff_stream.write( coef );
@@ -43,27 +78,31 @@ void ReadFromMem(
     }
 }
 
-void Window2D(
-        unsigned short          width,
-        unsigned short          height,
-        hls::stream<myDatatype>   &pixel_stream,
-        hls::stream<window>     &window_stream,
-        ap_int<1>               do_padding)
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+void Conv2D<width_filter, height_filter, channel_input, channel_output>::Window2D(
+        unsigned short          	width,
+        unsigned short          	height,
+        hls::stream<myDatatype>   	&pixel_stream,
+        hls::stream<window>     	&window_stream,
+        ap_int<1>               	do_padding)
 {
 #pragma HLS interface ap_ctrl_none port=return
-    // Line buffers - used to store [FILTER_V_SIZE-1] entire lines of pixels
-    myDatatype LineBuffer[FILTER_V_SIZE-1][IMAGE_WIDTH];
+    // Line buffers - used to store [height_filter-1] entire lines of pixels
+    myDatatype LineBuffer[height_filter-1][IMAGE_WIDTH];
 #pragma HLS ARRAY_PARTITION variable=LineBuffer dim=1 complete
 #pragma HLS DEPENDENCE variable=LineBuffer inter false
 #pragma HLS DEPENDENCE variable=LineBuffer intra false
 
-    // Sliding window of [FILTER_V_SIZE][FILTER_H_SIZE] pixels
+    // Sliding window of [height_filter][width_filter] pixels
     window Window;
 
     unsigned col_ptr = 0;
     // Initializing time to fill the data that raquired by a window into the line buffer
     // In the official code, because of the zero padding this is the time to get half the data in the first window
-    unsigned ramp_up = (do_padding == 1) ? width*((FILTER_V_SIZE-1)/2)+(FILTER_H_SIZE-1)/2: width*(FILTER_V_SIZE-1)+(FILTER_H_SIZE-1);
+    unsigned ramp_up = (do_padding == 1) ? width*((height_filter-1)/2)+(width_filter-1)/2: width*(height_filter-1)+(width_filter-1);
     unsigned num_pixels = width*height;
     unsigned num_iterations = num_pixels + ramp_up;
 
@@ -79,18 +118,18 @@ void Window2D(
 		#endif
 
         // Shift the window and add a column of new pixels from the line buffer
-        for(int i = 0; i < FILTER_V_SIZE; i++) {
-            for(int j = 0; j < FILTER_H_SIZE-1; j++) {
+        for(int i = 0; i < height_filter; i++) {
+            for(int j = 0; j < width_filter-1; j++) {
                 Window.pix[i][j] = Window.pix[i][j+1];
             }
-            Window.pix[i][FILTER_H_SIZE-1] = (i<FILTER_V_SIZE-1) ? LineBuffer[i][col_ptr] : new_pixel;
+            Window.pix[i][width_filter-1] = (i<height_filter-1) ? LineBuffer[i][col_ptr] : new_pixel;
         }
 
         // Shift pixels in the column of pixels in the line buffer, add the newest pixel
-        for(int i = 0; i < FILTER_V_SIZE-2; i++) {
+        for(int i = 0; i < height_filter-2; i++) {
             LineBuffer[i][col_ptr] = LineBuffer[i+1][col_ptr];
         }
-        LineBuffer[FILTER_V_SIZE-2][col_ptr] = new_pixel;
+        LineBuffer[height_filter-2][col_ptr] = new_pixel;
 
         // Update the line buffer column pointer
         if (col_ptr==(width - 1)) {
@@ -103,7 +142,7 @@ void Window2D(
         if (n>=ramp_up) {
         	unsigned short col_idx = (n - ramp_up) % width;
         	unsigned short row_idx = (n - ramp_up) / height;
-        	if (col_idx < width - FILTER_H_SIZE + 1 && row_idx < height - FILTER_V_SIZE + 1)
+        	if (col_idx < width - width_filter + 1 && row_idx < height - height_filter + 1)
         		window_stream.write(Window);
         	else{
         		if (do_padding == 1) window_stream.write(Window);
@@ -113,22 +152,26 @@ void Window2D(
     }
 }
 
-void Filter2D(
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+void Conv2D<width_filter, height_filter, channel_input, channel_output>::Filter2D(
         unsigned short              width,
         unsigned short              height,
-        hls::stream<myDatatype>       &coeff_stream,
+        hls::stream<myDatatype>     &coeff_stream,
         hls::stream<window>         &window_stream,
-		hls::stream<myDatatype>       &output_stream,
+		hls::stream<myDatatype>     &output_stream,
         ap_int<1>                   do_padding)
 {
 #pragma HLS interface ap_ctrl_none port=return
     // Filtering coefficients
-    myDatatype coeffs[FILTER_V_SIZE][FILTER_H_SIZE];
+    myDatatype coeffs[height_filter][width_filter];
 #pragma HLS ARRAY_PARTITION variable=coeffs complete dim=0
 
     // Load the coefficients into local storage
-    load_coefs: for (int i=0; i<FILTER_V_SIZE; i++) {
-        for (int j=0; j<FILTER_H_SIZE; j++) {
+    load_coefs: for (int i=0; i<height_filter; i++) {
+        for (int j=0; j<width_filter; j++) {
 #pragma HLS PIPELINE II=1
             coeffs[i][j] = coeff_stream.read();
 			#ifdef PRINT
@@ -139,8 +182,8 @@ void Filter2D(
 
     // If we don't want to pad the image, the output size will be shinked
     // I only implemented stide=1, so the size after convolution will be (OriginalSize - WindowSize> + 1)
-    height = (do_padding == true)? height: height-FILTER_V_SIZE+1;
-    width = (do_padding == true)? width: width-FILTER_H_SIZE+1;
+    height = (do_padding == true)? height: height-height_filter+1;
+    width = (do_padding == true)? width: width-width_filter+1;
 
     // Process the incoming stream of pixel windows
     apply_filter: for (int y = 0; y < height; y++)
@@ -155,13 +198,13 @@ void Filter2D(
 			#endif
             // Apply filter to the 2D window
             myDatatype sum = 0.0;
-            for(int row=0; row<FILTER_V_SIZE; row++)
+            for(int row=0; row<height_filter; row++)
             {
-                for(int col=0; col<FILTER_H_SIZE; col++)
+                for(int col=0; col<width_filter; col++)
                 {
                     myDatatype pixel;
-                    int xoffset = (x+col-(FILTER_H_SIZE/2));
-                    int yoffset = (y+row-(FILTER_V_SIZE/2));
+                    int xoffset = (x+col-(width_filter/2));
+                    int yoffset = (y+row-(height_filter/2));
                     // Deal with boundary conditions : clamp pixels to 0 when outside of image
                     // Pad zero to the pixels that over the image
                     if ( do_padding==1 && ((xoffset<0) || (xoffset>=width) || (yoffset<0) || (yoffset>=height)) ) {
@@ -171,13 +214,13 @@ void Filter2D(
                     }
 					#ifdef PRINT
             			std::cout << w.pix[row][col];
-						if (col == FILTER_H_SIZE-1) std::cout << "\n" << std::endl;
+						if (col == width_filter-1) std::cout << "\n" << std::endl;
 						else std::cout << "\t";
 					#endif
 
                     sum += pixel*(myDatatype)coeffs[row][col];
                 }
-            } 
+            }
             // Write the output pixel
             output_stream.write(sum);
 			#ifdef PRINT
@@ -193,12 +236,14 @@ void Filter2D(
 /*
  * A module used for executing one channel convolution
  */
-void Filter2DKernel(
-        const myDatatype                 Wconv[FILTER_V_SIZE*FILTER_H_SIZE],
-        unsigned short           width_input,
-        unsigned short           height_input,
-        hls::stream<myDatatype>    &input_stream,
-        hls::stream<myDatatype>    &output_stream)
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+void Conv2D<width_filter, height_filter, channel_input, channel_output>::Filter2DKernel(
+		const myDatatype            Wconv[height_filter*width_filter],
+        hls::stream<myDatatype>     &input_stream,
+        hls::stream<myDatatype>     &output_stream)
     {
 #pragma HLS interface ap_ctrl_none port=return
 #pragma HLS DATAFLOW
@@ -216,15 +261,19 @@ void Filter2DKernel(
 
 	// Process incoming stream of pixels, and stream pixels out
 	Filter2D(width_input, height_input, coefs_stream, window_stream, output_stream, 0);
-    }
+}
 
-void summation(
-        myDatatype                 bias,
-        unsigned short           width,
-        unsigned short           height,
-        unsigned short           num_channel,
-        hls::stream<myDatatype>    &ChannelOutput_stream,
-        hls::stream<myDatatype>    &OverallOutput_stream)
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+void Conv2D<width_filter, height_filter, channel_input, channel_output>::summation(
+        const myDatatype            bias,
+        unsigned short           	width,
+        unsigned short           	height,
+        unsigned short           	num_channel,
+        hls::stream<myDatatype>     &ChannelOutput_stream,
+        hls::stream<myDatatype>     &OverallOutput_stream)
 {
 #pragma HLS interface ap_ctrl_none port=return
     myDatatype outputFeature[height][width];
@@ -246,13 +295,13 @@ void summation(
     }
 }
 
-void pixelBuffer(
-        unsigned short           width_input,
-        unsigned short           height_input,
-	    unsigned short 			 channel_input,
-	    unsigned short 			 channel_output,
-        hls::stream<myDatatype>    &input_stream,
-        hls::stream<myDatatype>    &Buffer_stream)
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+void Conv2D<width_filter, height_filter, channel_input, channel_output>::pixelBuffer(
+        hls::stream<myDatatype>     &input_stream,
+        hls::stream<myDatatype>     &Buffer_stream)
 {
 #pragma HLS interface ap_ctrl_none port=return
     myDatatype inputBuffer[channel_input][height_input][width_input];
@@ -273,24 +322,22 @@ void pixelBuffer(
 }
 
 
-void conv1(
-		const myDatatype                 Wconv[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
-		const myDatatype                 Bconv[layer2ChannelNum],
-        unsigned short           width_input,
-        unsigned short           height_input,
-        hls::stream<myDatatype>    &input_stream,
-        hls::stream<myDatatype>    &OverallOutput_stream)
+template<	unsigned short 				width_filter,
+			unsigned short 				height_filter,
+			unsigned short 				channel_input,
+			unsigned short 				channel_output>
+void Conv2D<width_filter, height_filter, channel_input, channel_output>::operator()(
+		const myDatatype                 Wconv[channel_output][channel_input][height_filter*width_filter],
+		const myDatatype                 Bconv[channel_output],
+        hls::stream<myDatatype>    		 &input_stream,
+        hls::stream<myDatatype>    		 &OverallOutput_stream)
 {
 #pragma HLS interface ap_ctrl_none port=return
 #pragma HLS DATAFLOW
 	hls::stream<myDatatype> Buffer_stream("Buffer_stream");
     hls::stream<myDatatype> ChannelOutput_stream("ChannelOutput_stream");
-    unsigned short width_output   = width_input - FILTER_H_SIZE + 1;
-    unsigned short height_output  = height_input - FILTER_V_SIZE + 1;
-    unsigned short channel_input  = layer1ChannelNum;
-    unsigned short channel_output = layer2ChannelNum;
 
-    pixelBuffer(width_input, height_input, channel_input, channel_output, input_stream, Buffer_stream);
+    pixelBuffer(input_stream, Buffer_stream);
     // Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
     for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
         // Execute convolution for a kernel
@@ -301,7 +348,7 @@ void conv1(
 				std::cout << "========================================= kernel: " << channel_num_o << " ============================================" << std::endl;
 				std::cout << "================================================================================================" << std::endl;
 			#endif
-            Filter2DKernel(Wconv[channel_num_o][channel_num_i], width_input, height_input, Buffer_stream, ChannelOutput_stream);
+            Filter2DKernel(Wconv[channel_num_o][channel_num_i], Buffer_stream, ChannelOutput_stream);
         }
         // Summation module sum the value in the same coordinate up then add by the bias
         summation(Bconv[channel_num_o], width_output, height_output, channel_input, ChannelOutput_stream, OverallOutput_stream);
@@ -312,3 +359,4 @@ void conv1(
  * 我不太確定最後一個Module中的summation()要放在回圈內還是外，放在裡面我怕會有三個一樣的硬體 (我要三次Filter2DKernel()都對應到同一個summation())，放外面不知道會不會等迴圈內容結束才執行?
  * 感覺放裡面應該不會有三個一樣的硬體，因為我沒有Unroll。如果它變成三個硬體同步執行，我就不會知道他執行的順序是怎麼樣，summation()裡面預設一層一層跑的順序就不一定對了。
  */
+//}
