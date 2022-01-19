@@ -94,7 +94,8 @@ void Window2D(
         // Write output only when enough pixels have been read the buffers and ramped-up
         if (n>=ramp_up) {
         	unsigned short col_idx = (n - ramp_up) % width;
-        	if (col_idx < width - FILTER_H_SIZE + 1)
+        	unsigned short row_idx = (n - ramp_up) / height;
+        	if (col_idx < width - FILTER_H_SIZE + 1 && row_idx < height - FILTER_V_SIZE + 1)
         		window_stream.write(Window);
         	else{
         		if (do_padding == 1) window_stream.write(Window);
@@ -220,7 +221,7 @@ void summation(
                 if (c == num_channel-1){
                     OverallOutput_stream.write(outputFeature[y][x] + bias);
                 }
-                std::cout << "outputFeature[" << y << "][" << x<< "] in summation: " << outputFeature[y][x] << std::endl;
+                std::cout << "outputFeature[" << y << "][" << x<< "] in summation: " << outputFeature[y][x] + bias << std::endl;
             }
         }
     }
@@ -229,20 +230,23 @@ void summation(
 void pixelBuffer(
         unsigned short           width_input,
         unsigned short           height_input,
+	    unsigned short 			 channel_input,
 	    unsigned short 			 channel_output,
         hls::stream<myDatatype>    &input_stream,
         hls::stream<myDatatype>    &Buffer_stream)
 {
-    myDatatype inputBuffer[height_input][width_input];
-	for (int c = 0; c < channel_output; c++){
-		for (int y = 0; y < height_input; y++){
-			for (int x = 0; x < width_input; x++){
-				if (c == 0){
-					myDatatype temp = input_stream.read();
-					Buffer_stream.write(temp);
-					inputBuffer[y][x] = temp;
+    myDatatype inputBuffer[channel_input][height_input][width_input];
+	for (int c_o = 0; c_o < channel_output; c_o++){
+		for (int c_i = 0; c_i < channel_input; c_i++){
+			for (int y = 0; y < height_input; y++){
+				for (int x = 0; x < width_input; x++){
+					if (c_o == 0){
+						myDatatype temp = input_stream.read();
+						Buffer_stream.write(temp);
+						inputBuffer[c_i][y][x] = temp;
+					}
+					else Buffer_stream.write(inputBuffer[c_i][y][x]);
 				}
-				else Buffer_stream.write(inputBuffer[y][x]);
 			}
 		}
 	}
@@ -266,16 +270,19 @@ void conv1(
     unsigned short channel_input  = layer1ChannelNum;
     unsigned short channel_output = layer2ChannelNum;
 
-    pixelBuffer(width_input, height_input, channel_output, input_stream, Buffer_stream);
+    pixelBuffer(width_input, height_input, channel_input, channel_output, input_stream, Buffer_stream);
     // Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
     for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
         // Execute convolution for a kernel
         for (int channel_num_i = 0; channel_num_i < channel_input; channel_num_i++){
             // Do convolution on every channels, then send the output stream to summation module
+        	std::cout << "================================================================================================" << std::endl;
+        	std::cout << "========================================= kernel: " << channel_num_o << " ============================================" << std::endl;
+        	std::cout << "================================================================================================" << std::endl;
             Filter2DKernel(Wconv[channel_num_o][channel_num_i], width_input, height_input, Buffer_stream, ChannelOutput_stream);
         }
         // Summation module sum the value in the same coordinate up then add by the bias
-        summation(Bconv[channel_num_o], width_output, height_output, channel_output, ChannelOutput_stream, OverallOutput_stream);
+        summation(Bconv[channel_num_o], width_output, height_output, channel_input, ChannelOutput_stream, OverallOutput_stream);
     }
 }
 

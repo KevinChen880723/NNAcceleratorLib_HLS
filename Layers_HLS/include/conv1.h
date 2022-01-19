@@ -51,6 +51,7 @@ void summation(
 void pixelBuffer(
         unsigned short           width_input,
         unsigned short           height_input,
+	    unsigned short 			 channel_input,
 	    unsigned short 			 channel_output,
         hls::stream<myDatatype>    &input_stream,
         hls::stream<myDatatype>    &Buffer_stream);
