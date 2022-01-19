@@ -96,6 +96,9 @@ void Window2D(
         	unsigned short col_idx = (n - ramp_up) % width;
         	if (col_idx < width - FILTER_H_SIZE + 1)
         		window_stream.write(Window);
+        	else{
+        		if (do_padding == 1) window_stream.write(Window);
+        	}
         }
 
     }
@@ -223,6 +226,29 @@ void summation(
     }
 }
 
+void pixelBuffer(
+        unsigned short           width_input,
+        unsigned short           height_input,
+	    unsigned short 			 channel_output,
+        hls::stream<myDatatype>    &input_stream,
+        hls::stream<myDatatype>    &Buffer_stream)
+{
+    myDatatype inputBuffer[height_input][width_input];
+	for (int c = 0; c < channel_output; c++){
+		for (int y = 0; y < height_input; y++){
+			for (int x = 0; x < width_input; x++){
+				if (c == 0){
+					myDatatype temp = input_stream.read();
+					Buffer_stream.write(temp);
+					inputBuffer[y][x] = temp;
+				}
+				else Buffer_stream.write(inputBuffer[y][x]);
+			}
+		}
+	}
+}
+
+
 void conv1(
 		const myDatatype                 Wconv[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
 		const myDatatype                 Bconv[layer2ChannelNum],
@@ -232,25 +258,21 @@ void conv1(
         hls::stream<myDatatype>    &OverallOutput_stream)
 {
 //#pragma HLS interface ap_ctrl_none port=return
-//#pragma HLS DATAFLOW
+#pragma HLS DATAFLOW
+	hls::stream<myDatatype> Buffer_stream("Buffer_stream");
     hls::stream<myDatatype> ChannelOutput_stream("ChannelOutput_stream");
     unsigned short width_output   = width_input - FILTER_H_SIZE + 1;
     unsigned short height_output  = height_input - FILTER_V_SIZE + 1;
     unsigned short channel_input  = layer1ChannelNum;
     unsigned short channel_output = layer2ChannelNum;
-//    std::cout << "The address of input_stream in conv1() is: " << &input_stream << std::endl;
-//    for(int i = 0; i < 784; i++){
-//    	myDatatype data = input_stream.read();
-//    	std::cout << "data in conv1: " << data << std::endl;
-//    	OverallOutput_stream.write(data);
-//    }
 
+    pixelBuffer(width_input, height_input, channel_output, input_stream, Buffer_stream);
     // Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
     for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
         // Execute convolution for a kernel
         for (int channel_num_i = 0; channel_num_i < channel_input; channel_num_i++){
             // Do convolution on every channels, then send the output stream to summation module
-            Filter2DKernel(Wconv[channel_num_o][channel_num_i], width_input, height_input, input_stream, ChannelOutput_stream);
+            Filter2DKernel(Wconv[channel_num_o][channel_num_i], width_input, height_input, Buffer_stream, ChannelOutput_stream);
         }
         // Summation module sum the value in the same coordinate up then add by the bias
         summation(Bconv[channel_num_o], width_output, height_output, channel_output, ChannelOutput_stream, OverallOutput_stream);

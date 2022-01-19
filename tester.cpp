@@ -44,7 +44,6 @@ int main(int argc, char *argv[]){
 	}
 	fs.close();
 
-
 	if (pass == 0) {
 		cout << "test failed" << endl;
 		return 1;

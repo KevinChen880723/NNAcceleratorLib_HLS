@@ -48,6 +48,13 @@ void summation(
         hls::stream<myDatatype>    &ChannelOutput_stream,
         hls::stream<myDatatype>    &OverallOutput_stream);
 
+void pixelBuffer(
+        unsigned short           width_input,
+        unsigned short           height_input,
+	    unsigned short 			 channel_output,
+        hls::stream<myDatatype>    &input_stream,
+        hls::stream<myDatatype>    &Buffer_stream);
+
 void conv1(
 		const myDatatype                 Wconv[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE],
 		const myDatatype                 Bconv[layer2ChannelNum],

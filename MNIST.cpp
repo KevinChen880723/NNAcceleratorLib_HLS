@@ -61,18 +61,18 @@ void WriteToMem(
 {
 //#pragma HLS interface ap_ctrl_none port=return
     write_image: for (int n = 0; n < num_channel*height*width; n++) {
-//    	myDatatype pix = pixel_stream.read();
-//        std::cout << "pix in WriteToMem: " << pix << std::endl;
-//        dst[n] = pix;
-    	myDatatype pix;
-    	if (pixel_stream.read_nb(pix)){
-    		std::cout << "pix in WriteToMem: " << pix << std::endl;
-    		dst[n] = pix;
-    	}
-    	else{
-    		;
-//    		std::cout << "failed"  << std::endl;
-    	}
+    	myDatatype pix = pixel_stream.read();
+        std::cout << "pix in WriteToMem: " << pix << std::endl;
+        dst[n] = pix;
+//    	myDatatype pix;
+//    	if (pixel_stream.read_nb(pix)){
+//    		std::cout << "pix in WriteToMem: " << pix << std::endl;
+//    		dst[n] = pix;
+//    	}
+//    	else{
+//    		;
+////    		std::cout << "failed"  << std::endl;
+//    	}
     }
 }
 
