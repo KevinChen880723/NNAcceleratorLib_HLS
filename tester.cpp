@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
 	MNIST(imgArray, outputArray);
 
 	// Read the ground truth of conv1's output
-	fs.open("C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/hlsTest_float_folder/conv1_output.txt");
+	fs.open("C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/hlsTest_float_folder/relu(conv2_output).txt");
 	for (int i = 0; i < num_outputPixels; i++){
 		getline(fs, data);
 		myDatatype data_GT = myDatatype(stof(data));
