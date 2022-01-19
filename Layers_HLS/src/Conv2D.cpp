@@ -357,9 +357,4 @@ namespace YKHLS{
 			summation(Bconv[channel_num_o], width_output, height_output, channel_input, ChannelOutput_stream, OverallOutput_stream);
 		}
 	}
-
-	/*
-	 * 我不太確定最後一個Module中的summation()要放在回圈內還是外，放在裡面我怕會有三個一樣的硬體 (我要三次Filter2DKernel()都對應到同一個summation())，放外面不知道會不會等迴圈內容結束才執行?
-	 * 感覺放裡面應該不會有三個一樣的硬體，因為我沒有Unroll。如果它變成三個硬體同步執行，我就不會知道他執行的順序是怎麼樣，summation()裡面預設一層一層跑的順序就不一定對了。
-	 */
 }

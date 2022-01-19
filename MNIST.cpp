@@ -62,6 +62,6 @@ void MNIST(myDatatype *img, myDatatype *output){
 	relu1(conv1_output_stream, conv2_input_stream);
 	conv2(Wconv2, Bconv2, conv2_input_stream, conv2_output_stream);
 	relu2(conv2_output_stream, output_stream);
-	WriteToMem(layer2ChannelNum, 26, 26, output_stream, output);
+	WriteToMem(layer3ChannelNum, 24, 24, output_stream, output);
 	return;
 }

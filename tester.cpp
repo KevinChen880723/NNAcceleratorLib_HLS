@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc, char *argv[]){
 	bool pass = 1;
 	int num_pixels = IMAGE_WIDTH*IMAGE_HEIGHT;
-	int num_outputPixels = 10 * 26 * 26;
+	int num_outputPixels = 8 * 24 * 24;
 
 	fstream fs;
 	string data;
