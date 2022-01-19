@@ -1,6 +1,6 @@
 #include <hls_stream.h>
 #include "MNIST.h"
-//#include "./Layers_HLS/src/Conv2D.cpp"
+#include "./Layers_HLS/src/Conv2D.cpp"
 #include "./Layers_HLS/include/Conv2D.h"
 
 #ifndef __SYNTHESIS__

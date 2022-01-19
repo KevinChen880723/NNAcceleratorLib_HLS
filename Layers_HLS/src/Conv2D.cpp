@@ -39,15 +39,15 @@ template<	unsigned short 				width_filter,
 			unsigned short 				channel_input,
 			unsigned short 				channel_output>
 Conv2D<width_filter, height_filter, channel_input, channel_output>::Conv2D(
-			unsigned short 				width_input,
-			unsigned short 				height_input,
-			unsigned short 				width_output,
-			unsigned short 				height_output)
+			unsigned short 				W_i,
+			unsigned short 				H_i,
+			unsigned short 				W_o,
+			unsigned short 				H_o)
 {
-	width_input = width_input;
-	height_input = height_input;
-	width_output = width_output;
-	height_output = height_output;
+	width_input = W_i;
+	height_input = H_i;
+	width_output = W_o;
+	height_output = H_o;
 }
 
 template<	unsigned short 				width_filter,
@@ -276,7 +276,8 @@ void Conv2D<width_filter, height_filter, channel_input, channel_output>::summati
         hls::stream<myDatatype>     &OverallOutput_stream)
 {
 #pragma HLS interface ap_ctrl_none port=return
-    myDatatype outputFeature[height][width];
+
+	myDatatype outputFeature[height][width];
     for(int c = 0; c < num_channel; c++){
         for(int y = 0; y < height; y++){
             for(int x = 0; x < width; x++){
@@ -304,6 +305,7 @@ void Conv2D<width_filter, height_filter, channel_input, channel_output>::pixelBu
         hls::stream<myDatatype>     &Buffer_stream)
 {
 #pragma HLS interface ap_ctrl_none port=return
+
     myDatatype inputBuffer[channel_input][height_input][width_input];
 	for (int c_o = 0; c_o < channel_output; c_o++){
 		for (int c_i = 0; c_i < channel_input; c_i++){
@@ -334,6 +336,7 @@ void Conv2D<width_filter, height_filter, channel_input, channel_output>::operato
 {
 #pragma HLS interface ap_ctrl_none port=return
 #pragma HLS DATAFLOW
+
 	hls::stream<myDatatype> Buffer_stream("Buffer_stream");
     hls::stream<myDatatype> ChannelOutput_stream("ChannelOutput_stream");
 
