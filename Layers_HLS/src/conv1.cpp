@@ -16,7 +16,9 @@
 
 #include "../include/conv1.h"
 
-#define PRINT
+#ifndef __SYNTHESIS__
+//	#define PRINT
+#endif
 void ReadFromMem(
         unsigned short            width,
         unsigned short            height,
@@ -25,6 +27,7 @@ void ReadFromMem(
         hls::stream<myDatatype>     &coeff_stream,
         hls::stream<myDatatype>     &pixel_stream )
 {
+#pragma HLS interface ap_ctrl_none port=return
     unsigned short num_coefs = FILTER_V_SIZE*FILTER_H_SIZE;
     read_coefs: for (int i=0; i<num_coefs; i++) {
         myDatatype coef = weights[i];
@@ -47,6 +50,7 @@ void Window2D(
         hls::stream<window>     &window_stream,
         ap_int<1>               do_padding)
 {
+#pragma HLS interface ap_ctrl_none port=return
     // Line buffers - used to store [FILTER_V_SIZE-1] entire lines of pixels
     myDatatype LineBuffer[FILTER_V_SIZE-1][IMAGE_WIDTH];
 #pragma HLS ARRAY_PARTITION variable=LineBuffer dim=1 complete
@@ -69,7 +73,7 @@ void Window2D(
 #pragma HLS PIPELINE II=1
 
         // Read a new pixel from the input stream
-        myDatatype new_pixel = (n<num_out_pixels) ? pixel_stream.read() : 0;
+        myDatatype new_pixel = (n<num_out_pixels) ? pixel_stream.read() : myDatatype(0);
 		#ifdef PRINT
         	std::cout << "new_pixel in Window2D: " << new_pixel << std::endl;
 		#endif
@@ -117,6 +121,7 @@ void Filter2D(
 		hls::stream<myDatatype>       &output_stream,
         ap_int<1>                   do_padding)
 {
+#pragma HLS interface ap_ctrl_none port=return
     // Filtering coefficients
     myDatatype coeffs[FILTER_V_SIZE][FILTER_H_SIZE];
 #pragma HLS ARRAY_PARTITION variable=coeffs complete dim=0
@@ -166,9 +171,9 @@ void Filter2D(
                     }
 					#ifdef PRINT
             			std::cout << w.pix[row][col];
+						if (col == FILTER_H_SIZE-1) std::cout << "\n" << std::endl;
+						else std::cout << "\t";
 					#endif
-            		if (col == FILTER_H_SIZE-1) std::cout << "\n" << std::endl;
-            		else std::cout << "\t";
 
                     sum += pixel*(myDatatype)coeffs[row][col];
                 }
@@ -195,6 +200,7 @@ void Filter2DKernel(
         hls::stream<myDatatype>    &input_stream,
         hls::stream<myDatatype>    &output_stream)
     {
+#pragma HLS interface ap_ctrl_none port=return
 #pragma HLS DATAFLOW
 
 	// Stream of pixels from kernel input to filter, and from filter to output
@@ -220,6 +226,7 @@ void summation(
         hls::stream<myDatatype>    &ChannelOutput_stream,
         hls::stream<myDatatype>    &OverallOutput_stream)
 {
+#pragma HLS interface ap_ctrl_none port=return
     myDatatype outputFeature[height][width];
     for(int c = 0; c < num_channel; c++){
         for(int y = 0; y < height; y++){
@@ -247,6 +254,7 @@ void pixelBuffer(
         hls::stream<myDatatype>    &input_stream,
         hls::stream<myDatatype>    &Buffer_stream)
 {
+#pragma HLS interface ap_ctrl_none port=return
     myDatatype inputBuffer[channel_input][height_input][width_input];
 	for (int c_o = 0; c_o < channel_output; c_o++){
 		for (int c_i = 0; c_i < channel_input; c_i++){
@@ -273,7 +281,7 @@ void conv1(
         hls::stream<myDatatype>    &input_stream,
         hls::stream<myDatatype>    &OverallOutput_stream)
 {
-//#pragma HLS interface ap_ctrl_none port=return
+#pragma HLS interface ap_ctrl_none port=return
 #pragma HLS DATAFLOW
 	hls::stream<myDatatype> Buffer_stream("Buffer_stream");
     hls::stream<myDatatype> ChannelOutput_stream("ChannelOutput_stream");
@@ -301,6 +309,6 @@ void conv1(
 }
 
 /*
- * ??‘ä?å¤ªç¢ºå?šæ?å¾Œä??‹Moduleä¸­ç?„summation()è¦æ”¾?œ¨??å?ˆå…§??„æ˜¯å¤–ï?Œæ”¾?œ¨è£¡é¢??‘æ?•æ?ƒæ?‰ä?‰å?‹ä?æ¨???„ç¡¬é«? (??‘è?ä?‰æ¬¡Filter2DKernel()?ƒ½å°æ?‰åˆ°??Œä??‹summation())ï¼Œæ”¾å¤–é¢ä¸çŸ¥??“æ?ƒä?æ?ƒç?‰è¿´??ˆå…§å®¹ç?æ?Ÿæ?åŸ·è¡??
- * ??Ÿè¦º?”¾è£¡é¢??‰è©²ä¸æ?ƒæ?‰ä?‰å?‹ä?æ¨???„ç¡¬é«”ï?Œå? ç‚º??‘æ?’æ?‰Unroll?‚å?‚æ?œå?ƒè?Šæ?ä?‰å?‹ç¡¬é«”å?Œæ­¥?Ÿ·è¡Œï?Œæ?‘å°±ä¸æ?ƒçŸ¥??“ä?–åŸ·è¡Œç?„é?†å?æ˜¯?éº¼æ¨?ï¼Œsummation()è£¡é¢??è¨­ä¸?å±¤ä?å±¤è?‘ç?„é?†å?å°±ä¸ä?å®šå?ä?†ã??
+ * §Ú¤£¤Ó½T©w³Ì«á¤@­ÓModule¤¤ªºsummation()­n©ñ¦b¦^°é¤ºÁÙ¬O¥~¡A©ñ¦b¸Ì­±§Ú©È·|¦³¤T­Ó¤@¼ËªºµwÅé (§Ú­n¤T¦¸Filter2DKernel()³£¹ïÀ³¨ì¦P¤@­Ósummation())¡A©ñ¥~­±¤£ª¾¹D·|¤£·|µ¥°j°é¤º®eµ²§ô¤~°õ¦æ?
+ * ·PÄ±©ñ¸Ì­±À³¸Ó¤£·|¦³¤T­Ó¤@¼ËªºµwÅé¡A¦]¬°§Ú¨S¦³Unroll¡C¦pªG¥¦ÅÜ¦¨¤T­ÓµwÅé¦P¨B°õ¦æ¡A§Ú´N¤£·|ª¾¹D¥L°õ¦æªº¶¶§Ç¬O«ç»ò¼Ë¡Asummation()¸Ì­±¹w³]¤@¼h¤@¼h¶]ªº¶¶§Ç´N¤£¤@©w¹ï¤F¡C
  */

@@ -1,7 +1,10 @@
 #include <hls_stream.h>
 #include "MNIST.h"
 
-#define PRINT
+
+#ifndef __SYNTHESIS__
+//	#define PRINT
+#endif
 const myDatatype Wconv1[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
 	#include "./weight/conv1.weight.h"
 };
@@ -39,7 +42,7 @@ void readMemory(
 		unsigned short	      height_input,
 		hls::stream<myDatatype> &pixel_stream)
 {
-//#pragma HLS interface ap_ctrl_none port=return
+#pragma HLS interface ap_ctrl_none port=return
 	for (int i = 0; i < width_input*height_input; i++){
 		myDatatype data = img[i];
 		pixel_stream.write(data);
@@ -56,7 +59,7 @@ void WriteToMem(
         hls::stream<myDatatype>     &pixel_stream,
 		myDatatype                  *dst)
 {
-//#pragma HLS interface ap_ctrl_none port=return
+#pragma HLS interface ap_ctrl_none port=return
     write_image: for (int n = 0; n < num_channel*height*width; n++) {
     	myDatatype pix = pixel_stream.read();
 		#ifdef PRINT
@@ -67,7 +70,7 @@ void WriteToMem(
 }
 
 void MNIST(myDatatype *img, myDatatype *output){
-#pragma HLS interface s_axilite port=return
+#pragma HLS interface ap_ctrl_none port=return
 #pragma HLS interface m_axi depth=50 port=img
 #pragma HLS interface m_axi depth=50 port=output
 #pragma HLS dataflow
@@ -75,6 +78,6 @@ void MNIST(myDatatype *img, myDatatype *output){
 	myStream output_stream("output_stream");
 	readMemory(img, IMAGE_WIDTH, IMAGE_HEIGHT, input_stream);
 	conv1(Wconv1, Bconv1, 28, 28, input_stream, output_stream);
-	WriteToMem(10, 26, 26, output_stream, output);
+	WriteToMem(layer2ChannelNum, 26, 26, output_stream, output);
 	return;
 }

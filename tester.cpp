@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc, char *argv[]){
 	bool pass = 1;
 	int num_pixels = IMAGE_WIDTH*IMAGE_HEIGHT;
-	int num_outputPixels = 26 * 26;
+	int num_outputPixels = 10 * 26 * 26;
 
 	fstream fs;
 	string data;
@@ -24,23 +24,20 @@ int main(int argc, char *argv[]){
 	}
 	fs.close();
 
-//	// Print the testing img
-//	for (int y = 0; y < 28; y++){
-//		for (int x = 0; x < 28; x++){
-//			cout << imgArray[28*y+x];
-//			if (x != 27) cout << "\t";
-//			else cout << endl;
-//		}
-//	}
-
 	MNIST(imgArray, outputArray);
 
 	// Read the ground truth of conv1's output
 	fs.open("C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/hlsTest_float_folder/conv1_output.txt");
 	for (int i = 0; i < num_outputPixels; i++){
 		getline(fs, data);
-		data_myDatatype = stof(data);
-		groundTruthArray[i] = data_myDatatype;
+		myDatatype data_GT = myDatatype(stof(data));
+		if (data_GT - outputArray[i] > 0.0001 || data_GT - outputArray[i] < -0.0001){
+			pass = 0;
+			cout << "In iteration: " << i << endl;
+			cout << "data_GT is: " << data_GT << endl;
+			cout << "outputArray[i] is: " << outputArray[i] << endl;
+			break;
+		}
 	}
 	fs.close();
 
