@@ -16,6 +16,7 @@
 
 #include "../include/conv1.h"
 
+#define PRINT
 void ReadFromMem(
         unsigned short            width,
         unsigned short            height,
@@ -32,7 +33,9 @@ void ReadFromMem(
 
     read_image: for (int n = 0; n < height*width; n++) {
         myDatatype pix = input_stream.read();
-        std::cout << "pix in ReadFromMem: " << pix << std::endl;
+		#ifdef PRINT
+        	std::cout << "pix in ReadFromMem: " << pix << std::endl;
+		#endif
         pixel_stream.write( pix );
     }
 }
@@ -53,7 +56,6 @@ void Window2D(
     // Sliding window of [FILTER_V_SIZE][FILTER_H_SIZE] pixels
     window Window;
 
-    std::cout << "do_padding is: " << do_padding << std::endl;
     unsigned col_ptr = 0;
     // Initializing time to fill the data that raquired by a window into the line buffer
     // In the official code, because of the zero padding this is the time to get half the data in the first window
@@ -68,7 +70,9 @@ void Window2D(
 
         // Read a new pixel from the input stream
         myDatatype new_pixel = (n<num_out_pixels) ? pixel_stream.read() : 0;
-        std::cout << "new_pixel in Window2D: " << new_pixel << std::endl;
+		#ifdef PRINT
+        	std::cout << "new_pixel in Window2D: " << new_pixel << std::endl;
+		#endif
 
         // Shift the window and add a column of new pixels from the line buffer
         for(int i = 0; i < FILTER_V_SIZE; i++) {
@@ -122,7 +126,9 @@ void Filter2D(
         for (int j=0; j<FILTER_H_SIZE; j++) {
 #pragma HLS PIPELINE II=1
             coeffs[i][j] = coeff_stream.read();
-            std::cout << "coeffs[i][j] in Filter2D: " << coeffs[i][j] << std::endl;
+			#ifdef PRINT
+            	std::cout << "coeffs[i][j] in Filter2D: " << coeffs[i][j] << std::endl;
+			#endif
         }
     }
 
@@ -139,8 +145,9 @@ void Filter2D(
 #pragma HLS PIPELINE II=1
             // Read a 2D window of pixels
             window w = window_stream.read();
-            std::cout << "window in Filter2D(" << y << ", " << x << ")" << std::endl;
-
+			#ifdef PRINT
+            	std::cout << "window in Filter2D(" << y << ", " << x << ")" << std::endl;
+			#endif
             // Apply filter to the 2D window
             myDatatype sum = 0.0;
             for(int row=0; row<FILTER_V_SIZE; row++)
@@ -157,8 +164,9 @@ void Filter2D(
                     } else {
                         pixel = w.pix[row][col];
                     }
-
-            		std::cout << w.pix[row][col];
+					#ifdef PRINT
+            			std::cout << w.pix[row][col];
+					#endif
             		if (col == FILTER_H_SIZE-1) std::cout << "\n" << std::endl;
             		else std::cout << "\t";
 
@@ -167,9 +175,11 @@ void Filter2D(
             } 
             // Write the output pixel
             output_stream.write(sum);
-            std::cout << "------------------------------------------------------------------" << std::endl;
-            std::cout << "Sum in the window = " << sum << "\t<<" << y*width+x << ">>" << std::endl;
-            std::cout << "------------------------------------------------------------------" << std::endl;
+			#ifdef PRINT
+            	std::cout << "------------------------------------------------------------------" << std::endl;
+            	std::cout << "Sum in the window = " << sum << "\t<<" << y*width+x << ">>" << std::endl;
+            	std::cout << "------------------------------------------------------------------" << std::endl;
+			#endif
         }
     }
 }
@@ -221,7 +231,9 @@ void summation(
                 if (c == num_channel-1){
                     OverallOutput_stream.write(outputFeature[y][x] + bias);
                 }
-                std::cout << "outputFeature[" << y << "][" << x<< "] in summation: " << outputFeature[y][x] + bias << std::endl;
+				#ifdef PRINT
+                	std::cout << "outputFeature[" << y << "][" << x<< "] in summation: " << outputFeature[y][x] + bias << std::endl;
+				#endif
             }
         }
     }
@@ -276,9 +288,11 @@ void conv1(
         // Execute convolution for a kernel
         for (int channel_num_i = 0; channel_num_i < channel_input; channel_num_i++){
             // Do convolution on every channels, then send the output stream to summation module
-        	std::cout << "================================================================================================" << std::endl;
-        	std::cout << "========================================= kernel: " << channel_num_o << " ============================================" << std::endl;
-        	std::cout << "================================================================================================" << std::endl;
+			#ifdef PRINT
+				std::cout << "================================================================================================" << std::endl;
+				std::cout << "========================================= kernel: " << channel_num_o << " ============================================" << std::endl;
+				std::cout << "================================================================================================" << std::endl;
+			#endif
             Filter2DKernel(Wconv[channel_num_o][channel_num_i], width_input, height_input, Buffer_stream, ChannelOutput_stream);
         }
         // Summation module sum the value in the same coordinate up then add by the bias

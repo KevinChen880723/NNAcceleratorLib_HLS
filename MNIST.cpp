@@ -1,6 +1,7 @@
 #include <hls_stream.h>
 #include "MNIST.h"
 
+#define PRINT
 const myDatatype Wconv1[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
 	#include "./weight/conv1.weight.h"
 };
@@ -39,16 +40,12 @@ void readMemory(
 		hls::stream<myDatatype> &pixel_stream)
 {
 //#pragma HLS interface ap_ctrl_none port=return
-	std::cout << "The address of input_stream in readMemory() is: " << &pixel_stream << std::endl;
 	for (int i = 0; i < width_input*height_input; i++){
 		myDatatype data = img[i];
 		pixel_stream.write(data);
-//		myDatatype data2 = pixel_stream.read();
-		std::cout << "First read: " << img[i] << "(" << i << ")" << std::endl;
-//		data2 = pixel_stream.read();
-//		std::cout << "Second read: " <<  data2 << std::endl;
-//		data2 = pixel_stream.read();
-//		std::cout << "Third Second read: " <<  data2 << std::endl;
+		#ifdef PRINT
+			std::cout << "First read: " << img[i] << "(" << i << ")" << std::endl;
+		#endif
 	}
 }
 
@@ -62,17 +59,10 @@ void WriteToMem(
 //#pragma HLS interface ap_ctrl_none port=return
     write_image: for (int n = 0; n < num_channel*height*width; n++) {
     	myDatatype pix = pixel_stream.read();
-        std::cout << "pix in WriteToMem: " << pix << std::endl;
+		#ifdef PRINT
+        	std::cout << "pix in WriteToMem: " << pix << std::endl;
+		#endif
         dst[n] = pix;
-//    	myDatatype pix;
-//    	if (pixel_stream.read_nb(pix)){
-//    		std::cout << "pix in WriteToMem: " << pix << std::endl;
-//    		dst[n] = pix;
-//    	}
-//    	else{
-//    		;
-////    		std::cout << "failed"  << std::endl;
-//    	}
     }
 }
 
@@ -81,8 +71,8 @@ void MNIST(myDatatype *img, myDatatype *output){
 #pragma HLS interface m_axi depth=50 port=img
 #pragma HLS interface m_axi depth=50 port=output
 #pragma HLS dataflow
-	myStream input_stream("input_stream"), output_stream("output_stream");
-	std::cout << "The address of input_stream in MNIST() is: " << &input_stream << std::endl;
+	myStream input_stream("input_stream");
+	myStream output_stream("output_stream");
 	readMemory(img, IMAGE_WIDTH, IMAGE_HEIGHT, input_stream);
 	conv1(Wconv1, Bconv1, 28, 28, input_stream, output_stream);
 	WriteToMem(10, 26, 26, output_stream, output);
