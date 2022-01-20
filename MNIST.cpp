@@ -48,12 +48,15 @@ void MNIST(myDatatype *img, myDatatype *output){
 	YKHLS::ReLU relu1(layer2ChannelNum, 26, 26);
 	YKHLS::Conv2D<FILTER_H_SIZE, FILTER_V_SIZE, layer2ChannelNum, layer3ChannelNum> conv2(26, 26, 24, 24);
 	YKHLS::ReLU relu2(layer3ChannelNum, 24, 24);
+	YKHLS::MaxPool2D<2, 2> maxpool1(24, 24, layer3ChannelNum);
+//	YKHLS::MaxPool2D<2, 2> maxpool1(28, 28, layer1ChannelNum);
 
 	// Declare hls::stream object which will used later
 	myStream conv1_input_stream("conv1_input_stream");
 	myStream conv1_output_stream("conv1_output_stream");
 	myStream conv2_input_stream("conv2_input_stream");
 	myStream conv2_output_stream("conv2_output_stream");
+	myStream maxpool1_output_stream("maxpool1_output_stream");
 	myStream output_stream("output_stream");
 
 	// Main Procedures of Inferencing
@@ -61,7 +64,10 @@ void MNIST(myDatatype *img, myDatatype *output){
 	conv1(Wconv1, Bconv1, conv1_input_stream, conv1_output_stream);
 	relu1(conv1_output_stream, conv2_input_stream);
 	conv2(Wconv2, Bconv2, conv2_input_stream, conv2_output_stream);
-	relu2(conv2_output_stream, output_stream);
-	WriteToMem(layer3ChannelNum, 24, 24, output_stream, output);
+	relu2(conv2_output_stream, conv2_output_stream);
+	maxpool1(conv2_output_stream, output_stream);
+	WriteToMem(layer3ChannelNum, 12, 12, output_stream, output);
+	//	maxpool1(conv1_input_stream, output_stream);
+	//	WriteToMem(layer1ChannelNum, 14, 14, output_stream, output);
 	return;
 }

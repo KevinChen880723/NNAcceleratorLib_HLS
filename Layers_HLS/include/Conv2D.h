@@ -5,10 +5,6 @@
 #ifndef CONV2DDEF
 #define CONV2DDEF
 
-struct window {
-    myDatatype pix[FILTER_V_SIZE][FILTER_H_SIZE];
-};
-
 namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
@@ -16,6 +12,7 @@ namespace YKHLS{
 				unsigned short 				channel_output>
 	class Conv2D{
 	public:
+
 		Conv2D();
 		Conv2D(	unsigned short 				width_input,
 				unsigned short 				height_input,
@@ -32,6 +29,10 @@ namespace YKHLS{
 		unsigned short height_input;
 		unsigned short width_output;
 		unsigned short height_output;
+
+		typedef struct window {
+		    myDatatype pix[height_filter][width_filter];
+		}window;
 
 		void ReadFromMem(
 				unsigned short            	width,

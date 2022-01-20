@@ -90,8 +90,10 @@ namespace YKHLS{
 			ap_int<1>               	do_padding)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
+
 		// Line buffers - used to store [height_filter-1] entire lines of pixels
 		myDatatype LineBuffer[height_filter-1][IMAGE_WIDTH];
+		// Use this pragma to partition the physical memory of LineBuffer into many separate memory blocks.
 	#pragma HLS ARRAY_PARTITION variable=LineBuffer dim=1 complete
 	#pragma HLS DEPENDENCE variable=LineBuffer inter false
 	#pragma HLS DEPENDENCE variable=LineBuffer intra false
@@ -165,6 +167,7 @@ namespace YKHLS{
 			ap_int<1>                   do_padding)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
+
 		// Filtering coefficients
 		myDatatype coeffs[height_filter][width_filter];
 	#pragma HLS ARRAY_PARTITION variable=coeffs complete dim=0

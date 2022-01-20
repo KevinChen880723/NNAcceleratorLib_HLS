@@ -13,6 +13,7 @@ namespace YKHLS{
 				hls::stream<myDatatype>    	&input_stream,
 				hls::stream<myDatatype>    	&output_stream)
 	{
+	#pragma HLS interface ap_ctrl_none port=return
 		for (int i = 0; i < channel_num * height * width; i++){
 			myDatatype temp = input_stream.read();
 			output_stream.write((temp < 0)? myDatatype(0): temp);
