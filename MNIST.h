@@ -3,7 +3,8 @@
 #include "./Layers_HLS/include/Conv2D.h"
 #include "./Layers_HLS/include/ReLU.h"
 #include "./Layers_HLS/src/MaxPool2D.cpp"
-//#include "./Layers_HLS/include/MaxPool2D.h"
+#include "./Layers_HLS/src/Linear2D.cpp"
+#include "./Layers_HLS/include/Linear2D.h"
 
 const myDatatype Wconv1[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
 	#include "./weight/conv1.weight.h"

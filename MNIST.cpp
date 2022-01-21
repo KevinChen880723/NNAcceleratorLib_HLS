@@ -54,6 +54,7 @@ void MNIST(myDatatype *img, myDatatype *output){
 	YKHLS::Conv2D<FILTER_H_SIZE, FILTER_V_SIZE, layer4ChannelNum, layer5ChannelNum> conv4(10, 10, 8, 8);
 	YKHLS::ReLU relu4(layer5ChannelNum, 8, 8);
 	YKHLS::MaxPool2D<2, 2> maxpool2(8, 8, layer5ChannelNum);
+	YKHLS::Linear2D<10, 64> fc;
 
 	// Declare hls::stream object which will used later
 	myStream conv1_input_stream("conv1_input_stream");
@@ -65,6 +66,7 @@ void MNIST(myDatatype *img, myDatatype *output){
 	myStream conv4_input_stream("conv4_input_stream");
 	myStream conv4_output_stream("conv4_output_stream");
 	myStream relu4_output_stream("relu4_output_stream");
+	myStream fc_input_stream("fc_input_stream");
 	myStream output_stream("output_stream");
 
 	// Main Procedures of Inferencing
@@ -78,7 +80,8 @@ void MNIST(myDatatype *img, myDatatype *output){
 	relu3(conv3_output_stream, conv4_input_stream);
 	conv4(Wconv4, Bconv4, conv4_input_stream, conv4_output_stream);
 	relu4(conv4_output_stream, relu4_output_stream);
-	maxpool2(relu4_output_stream, output_stream);
-	WriteToMem(layer5ChannelNum, 4, 4, output_stream, output);
+	maxpool2(relu4_output_stream, fc_input_stream);
+	fc(Wfc4, Bfc4, fc_input_stream, output_stream);
+	WriteToMem(1, 1, 10, output_stream, output);
 	return;
 }
