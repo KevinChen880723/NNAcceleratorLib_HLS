@@ -5,22 +5,19 @@
 namespace YKHLS{
 
 	template< unsigned short 	width_filter,
-			  unsigned short 	height_filter>
+			  unsigned short 	height_filter,
+			  unsigned short    width_input,
+			  unsigned short    height_input,
+			  unsigned short    channel_input>
 	class MaxPool2D{
 	public:
 
 		MaxPool2D();
-		MaxPool2D(	unsigned short w_i,
-					unsigned short h_i,
-					unsigned short c_i);
 
 		void operator()(
 				hls::stream<myDatatype>    	&input_stream,
 				hls::stream<myDatatype>     &output_stream);
 	private:
-		unsigned short            			width_input;
-		unsigned short            			height_input;
-		unsigned short            			channel_input;
 
 		typedef struct window {
 		    myDatatype pix[height_filter][width_filter];

@@ -80,12 +80,12 @@ void MNIST(myDatatype *img, myDatatype *output){
 	YKHLS::ReLU relu1(layer2ChannelNum, 26, 26);
 	YKHLS::Conv2D<FILTER_H_SIZE, FILTER_V_SIZE, layer2ChannelNum, layer3ChannelNum, 26, 26, 24, 24> conv2;
 	YKHLS::ReLU relu2(layer3ChannelNum, 24, 24);
-	YKHLS::MaxPool2D<2, 2> maxpool1(24, 24, layer3ChannelNum);
+	YKHLS::MaxPool2D<2, 2, 24, 24, layer3ChannelNum> maxpool1;
 	YKHLS::Conv2D<FILTER_H_SIZE, FILTER_V_SIZE, layer3ChannelNum, layer4ChannelNum, 12, 12, 10, 10> conv3;
 	YKHLS::ReLU relu3(layer4ChannelNum, 10, 10);
 	YKHLS::Conv2D<FILTER_H_SIZE, FILTER_V_SIZE, layer4ChannelNum, layer5ChannelNum, 10, 10, 8, 8> conv4;
 	YKHLS::ReLU relu4(layer5ChannelNum, 8, 8);
-	YKHLS::MaxPool2D<2, 2> maxpool2(8, 8, layer5ChannelNum);
+	YKHLS::MaxPool2D<2, 2, 8, 8, layer5ChannelNum> maxpool2;
 	YKHLS::Linear2D<10, 64> fc;
 
 	// Declare hls::stream object which will used later

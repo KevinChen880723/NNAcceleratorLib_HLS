@@ -6,36 +6,23 @@ namespace YKHLS{
 //		#define PRINT
 	#endif
 
-	template<	unsigned short 	width_filter,
-				unsigned short 	height_filter>
-	MaxPool2D<width_filter, height_filter>::MaxPool2D(): height_input(1), width_input(1), channel_input(1){}
+	template< unsigned short 	width_filter,
+			  unsigned short 	height_filter,
+			  unsigned short    width_input,
+			  unsigned short    height_input,
+			  unsigned short    channel_input>
+	MaxPool2D<width_filter, height_filter, width_input, height_input, channel_input>::MaxPool2D(){}
 
-	template<	unsigned short 	width_filter,
-				unsigned short 	height_filter>
-	MaxPool2D<width_filter, height_filter>::MaxPool2D(
-			unsigned short w_i,
-			unsigned short h_i,
-			unsigned short c_i)
-	{
-		width_input = w_i;
-		height_input = h_i;
-		channel_input = c_i;
-	}
-
-	template<	unsigned short 	width_filter,
-				unsigned short 	height_filter>
-	void MaxPool2D<width_filter, height_filter>::ReadFromMem(
+	template< unsigned short 	width_filter,
+			  unsigned short 	height_filter,
+			  unsigned short    width_input,
+			  unsigned short    height_input,
+			  unsigned short    channel_input>
+	void MaxPool2D<width_filter, height_filter, width_input, height_input, channel_input>::ReadFromMem(
 					hls::stream<myDatatype>     &input_stream,
 					hls::stream<myDatatype>     &pixel_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
-		std::cout << "\n========================================== ReadFromMem =================================================" << std::endl;
-		std::cout << "width_filter = " << width_filter << std::endl;
-		std::cout << "height_filter = " << height_filter << std::endl;
-		std::cout << "width_input = " << width_input << std::endl;
-		std::cout << "height_input = " << height_input << std::endl;
-		std::cout << "channel_input = " << channel_input << std::endl;
-		std::cout << "==========================================================================================================" << std::endl;
 		for (int i = 0; i < channel_input*height_input*width_input; i++){
 			myDatatype pix = input_stream.read();
 			#ifdef PRINT
@@ -45,23 +32,19 @@ namespace YKHLS{
 		}
 	}
 
-	template<	unsigned short 	width_filter,
-				unsigned short 	height_filter>
-	void MaxPool2D<width_filter, height_filter>::Window2D(
+	template< unsigned short 	width_filter,
+			  unsigned short 	height_filter,
+			  unsigned short    width_input,
+			  unsigned short    height_input,
+			  unsigned short    channel_input>
+	void MaxPool2D<width_filter, height_filter, width_input, height_input, channel_input>::Window2D(
 					hls::stream<myDatatype>   	&pixel_stream,
 					hls::stream<window>     	&window_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
-		std::cout << "\n========================================== Window2D =================================================" << std::endl;
-		std::cout << "width_filter = " << width_filter << std::endl;
-		std::cout << "height_filter = " << height_filter << std::endl;
-		std::cout << "width_input = " << width_input << std::endl;
-		std::cout << "height_input = " << height_input << std::endl;
-		std::cout << "channel_input = " << channel_input << std::endl;
-		std::cout << "==========================================================================================================" << std::endl;
-		const unsigned short width_filter_const = width_filter;
 		const unsigned short height_filter_const = height_filter;
-		myDatatype LineBuffer[height_filter_const][width_filter_const];
+		const unsigned short width_input_const = width_input;
+		myDatatype LineBuffer[height_filter_const][width_input_const];
 		unsigned short row = 0;
 		unsigned short col = 0;
 		window Window;
@@ -93,20 +76,16 @@ namespace YKHLS{
 
 	}
 
-	template<	unsigned short 	width_filter,
-				unsigned short 	height_filter>
-	void MaxPool2D<width_filter, height_filter>::Filter2D(
+	template< unsigned short 	width_filter,
+			  unsigned short 	height_filter,
+			  unsigned short    width_input,
+			  unsigned short    height_input,
+			  unsigned short    channel_input>
+	void MaxPool2D<width_filter, height_filter, width_input, height_input, channel_input>::Filter2D(
 				hls::stream<window>         &window_stream,
 				hls::stream<myDatatype>     &result_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
-		std::cout << "\n========================================== Filter2D =================================================" << std::endl;
-		std::cout << "width_filter = " << width_filter << std::endl;
-		std::cout << "height_filter = " << height_filter << std::endl;
-		std::cout << "width_input = " << width_input << std::endl;
-		std::cout << "height_input = " << height_input << std::endl;
-		std::cout << "channel_input = " << channel_input << std::endl;
-		std::cout << "==========================================================================================================" << std::endl;
 		for (int c = 0; c < channel_input; c++){
 			for (int y = 0; y < height_input/height_filter; y++){
 				for (int x = 0; x < width_input/width_filter; x++){
@@ -144,21 +123,17 @@ namespace YKHLS{
 		}
 	}
 
-	template<	unsigned short 	width_filter,
-				unsigned short 	height_filter>
-	void MaxPool2D<width_filter, height_filter>::operator()(
+	template< unsigned short 	width_filter,
+			  unsigned short 	height_filter,
+			  unsigned short    width_input,
+			  unsigned short    height_input,
+			  unsigned short    channel_input>
+	void MaxPool2D<width_filter, height_filter, width_input, height_input, channel_input>::operator()(
 				hls::stream<myDatatype>    	&input_stream,
 				hls::stream<myDatatype>     &output_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
 	#pragma HLS dataflow
-		std::cout << "\n========================================== operator() =================================================" << std::endl;
-		std::cout << "width_filter = " << width_filter << std::endl;
-		std::cout << "height_filter = " << height_filter << std::endl;
-		std::cout << "width_input = " << width_input << std::endl;
-		std::cout << "height_input = " << height_input << std::endl;
-		std::cout << "channel_input = " << channel_input << std::endl;
-		std::cout << "==========================================================================================================" << std::endl;
 		hls::stream<myDatatype> pixel_stream("pixel_stream");
 		hls::stream<window>     window_stream("window_stream");
 		ReadFromMem(input_stream, pixel_stream);
