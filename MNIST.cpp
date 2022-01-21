@@ -93,6 +93,7 @@ void MNIST(myDatatype *img, myDatatype *output){
 	myStream conv1_output_stream("conv1_output_stream");
 	myStream conv2_input_stream("conv2_input_stream");
 	myStream conv2_output_stream("conv2_output_stream");
+	myStream maxpool1_input_stream("maxpool1_input_stream");
 	myStream maxpool1_output_stream("maxpool1_output_stream");
 	myStream conv3_output_stream("conv3_output_stream");
 	myStream conv4_input_stream("conv4_input_stream");
@@ -106,14 +107,15 @@ void MNIST(myDatatype *img, myDatatype *output){
 	conv1(Wconv1, Bconv1, conv1_input_stream, conv1_output_stream);
 	relu1(conv1_output_stream, conv2_input_stream);
 	conv2(Wconv2, Bconv2, conv2_input_stream, conv2_output_stream);
-	relu2(conv2_output_stream, conv2_output_stream);
-	maxpool1(conv2_output_stream, maxpool1_output_stream);
-	conv3(Wconv3, Bconv3, maxpool1_output_stream, conv3_output_stream);
-	relu3(conv3_output_stream, conv4_input_stream);
-	conv4(Wconv4, Bconv4, conv4_input_stream, conv4_output_stream);
-	relu4(conv4_output_stream, relu4_output_stream);
-	maxpool2(relu4_output_stream, fc_input_stream);
-	fc(Wfc4, Bfc4, fc_input_stream, output_stream);
-	WriteToMem(1, 1, 10, output_stream, output);
+	relu2(conv2_output_stream, maxpool1_input_stream);
+	maxpool1(maxpool1_input_stream, maxpool1_output_stream);
+	WriteToMem(8, 12, 12, maxpool1_output_stream, output);
+//	conv3(Wconv3, Bconv3, maxpool1_output_stream, conv3_output_stream);
+//	relu3(conv3_output_stream, conv4_input_stream);
+//	conv4(Wconv4, Bconv4, conv4_input_stream, conv4_output_stream);
+//	relu4(conv4_output_stream, relu4_output_stream);
+//	maxpool2(relu4_output_stream, fc_input_stream);
+//	fc(Wfc4, Bfc4, fc_input_stream, output_stream);
+//	WriteToMem(1, 1, 10, output_stream, output);
 	return;
 }

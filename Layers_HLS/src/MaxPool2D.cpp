@@ -29,6 +29,13 @@ namespace YKHLS{
 					hls::stream<myDatatype>     &pixel_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
+		std::cout << "\n========================================== ReadFromMem =================================================" << std::endl;
+		std::cout << "width_filter = " << width_filter << std::endl;
+		std::cout << "height_filter = " << height_filter << std::endl;
+		std::cout << "width_input = " << width_input << std::endl;
+		std::cout << "height_input = " << height_input << std::endl;
+		std::cout << "channel_input = " << channel_input << std::endl;
+		std::cout << "==========================================================================================================" << std::endl;
 		for (int i = 0; i < channel_input*height_input*width_input; i++){
 			myDatatype pix = input_stream.read();
 			#ifdef PRINT
@@ -45,6 +52,13 @@ namespace YKHLS{
 					hls::stream<window>     	&window_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
+		std::cout << "\n========================================== Window2D =================================================" << std::endl;
+		std::cout << "width_filter = " << width_filter << std::endl;
+		std::cout << "height_filter = " << height_filter << std::endl;
+		std::cout << "width_input = " << width_input << std::endl;
+		std::cout << "height_input = " << height_input << std::endl;
+		std::cout << "channel_input = " << channel_input << std::endl;
+		std::cout << "==========================================================================================================" << std::endl;
 		const unsigned short width_filter_const = width_filter;
 		const unsigned short height_filter_const = height_filter;
 		myDatatype LineBuffer[height_filter_const][width_filter_const];
@@ -86,6 +100,13 @@ namespace YKHLS{
 				hls::stream<myDatatype>     &result_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
+		std::cout << "\n========================================== Filter2D =================================================" << std::endl;
+		std::cout << "width_filter = " << width_filter << std::endl;
+		std::cout << "height_filter = " << height_filter << std::endl;
+		std::cout << "width_input = " << width_input << std::endl;
+		std::cout << "height_input = " << height_input << std::endl;
+		std::cout << "channel_input = " << channel_input << std::endl;
+		std::cout << "==========================================================================================================" << std::endl;
 		for (int c = 0; c < channel_input; c++){
 			for (int y = 0; y < height_input/height_filter; y++){
 				for (int x = 0; x < width_input/width_filter; x++){
@@ -131,6 +152,13 @@ namespace YKHLS{
 	{
 	#pragma HLS interface ap_ctrl_none port=return
 	#pragma HLS dataflow
+		std::cout << "\n========================================== operator() =================================================" << std::endl;
+		std::cout << "width_filter = " << width_filter << std::endl;
+		std::cout << "height_filter = " << height_filter << std::endl;
+		std::cout << "width_input = " << width_input << std::endl;
+		std::cout << "height_input = " << height_input << std::endl;
+		std::cout << "channel_input = " << channel_input << std::endl;
+		std::cout << "==========================================================================================================" << std::endl;
 		hls::stream<myDatatype> pixel_stream("pixel_stream");
 		hls::stream<window>     window_stream("window_stream");
 		ReadFromMem(input_stream, pixel_stream);
