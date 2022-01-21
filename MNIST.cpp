@@ -39,7 +39,7 @@ void WriteToMem(
 }
 
 void MNIST(myDatatype *img, myDatatype *output){
-//#pragma HLS interface ap_ctrl_none port=return
+#pragma HLS interface ap_ctrl_none port=return
 #pragma HLS interface m_axi depth=50 port=img
 #pragma HLS interface m_axi depth=50 port=output
 #pragma HLS dataflow

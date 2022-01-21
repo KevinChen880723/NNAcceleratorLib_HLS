@@ -45,7 +45,9 @@ namespace YKHLS{
 					hls::stream<window>     	&window_stream)
 	{
 	#pragma HLS interface ap_ctrl_none port=return
-		myDatatype LineBuffer[height_filter][width_input];
+		const unsigned short width_filter_const = width_filter;
+		const unsigned short height_filter_const = height_filter;
+		myDatatype LineBuffer[height_filter_const][width_filter_const];
 		unsigned short row = 0;
 		unsigned short col = 0;
 		window Window;
