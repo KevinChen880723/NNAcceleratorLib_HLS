@@ -18,7 +18,7 @@
 #include "hls_stream.h"
 
 #ifndef __SYNTHESIS__
-	#define PRINT
+//	#define PRINT
 #endif
 
 namespace YKHLS{
@@ -354,13 +354,13 @@ namespace YKHLS{
 			hls::stream<myDatatype>    		 &OverallOutput_stream)
 	{
 		hls::stream<myDatatype, 10> ChannelOutput_stream("ChannelOutput_stream");
-		myDatatype sumBuffer[height_input-2][width_input-2];
+		myDatatype sumBuffer[height_output][width_output];
 		// Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
 		for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
 			// Execute convolution for a kernel
 			for (int channel_num_i = 0; channel_num_i < channel_input; channel_num_i++){
 				// Do convolution on every channels, then send the output stream to summation module
-				Filter2DKernel(Wconv[channel_num_o][0], Buffer_stream, ChannelOutput_stream);
+				Filter2DKernel(Wconv[channel_num_o][channel_num_i], Buffer_stream, ChannelOutput_stream);
 			}
 			summation(sumBuffer, Bconv[channel_num_o], width_output, height_output, channel_input, ChannelOutput_stream, OverallOutput_stream);
 		}
