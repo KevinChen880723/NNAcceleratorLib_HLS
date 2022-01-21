@@ -249,7 +249,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>     &output_stream)
 		{
 	#pragma HLS interface ap_ctrl_none port=return
-	#pragma HLS DATAFLOW
+//	#pragma HLS DATAFLOW
 
 		// Stream of pixels from kernel input to filter, and from filter to output
 		hls::stream<myDatatype,2>      coefs_stream("coefs_stream");
@@ -264,7 +264,7 @@ namespace YKHLS{
 
 		// Process incoming stream of pixels, and stream pixels out
 		Filter2D(width_input, height_input, coefs_stream, window_stream, output_stream, 0);
-	}
+		}
 
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
