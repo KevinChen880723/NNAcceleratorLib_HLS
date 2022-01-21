@@ -39,10 +39,42 @@ void WriteToMem(
 }
 
 void MNIST(myDatatype *img, myDatatype *output){
-#pragma HLS interface ap_ctrl_none port=return
+//#pragma HLS interface ap_ctrl_none port=return
 #pragma HLS interface m_axi depth=50 port=img
 #pragma HLS interface m_axi depth=50 port=output
 #pragma HLS dataflow
+
+	const myDatatype Wconv1[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
+		#include "./weight/conv1.weight.h"
+	};
+	const myDatatype Bconv1[layer2ChannelNum] = {
+		#include "./weight/conv1.bias.h"
+	};
+	const myDatatype Wconv2[layer3ChannelNum][layer2ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
+		#include "./weight/conv2.weight.h"
+	};
+	const myDatatype Bconv2[layer3ChannelNum] = {
+		#include "./weight/conv2.bias.h"
+	};
+	const myDatatype Wconv3[layer4ChannelNum][layer3ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
+		#include "./weight/conv3.weight.h"
+	};
+	const myDatatype Bconv3[layer4ChannelNum] = {
+		#include "./weight/conv3.bias.h"
+	};
+	const myDatatype Wconv4[layer5ChannelNum][layer4ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
+		#include "./weight/conv4.weight.h"
+	};
+	const myDatatype Bconv4[layer5ChannelNum] = {
+		#include "./weight/conv4.bias.h"
+	};
+	const myDatatype Wfc4[FC1OutfeatNum][FC1InfeatNum] = {
+		#include "./weight/fc.weight.h"
+	};
+	const myDatatype Bfc4[FC1OutfeatNum] = {
+		#include "./weight/fc.bias.h"
+	};
+
 	//Create Objects of the NN Layer
 	YKHLS::Conv2D<FILTER_H_SIZE, FILTER_V_SIZE, layer1ChannelNum, layer2ChannelNum> conv1(28, 28, 26, 26);
 	YKHLS::ReLU relu1(layer2ChannelNum, 26, 26);

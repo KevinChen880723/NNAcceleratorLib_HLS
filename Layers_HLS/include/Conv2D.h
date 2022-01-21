@@ -73,6 +73,12 @@ namespace YKHLS{
 		void pixelBuffer(
 				hls::stream<myDatatype>     &input_stream,
 				hls::stream<myDatatype>     &Buffer_stream);
+
+		void ExecuteConv(
+				const myDatatype                 Wconv[channel_output][channel_input][height_filter*width_filter],
+				const myDatatype                 Bconv[channel_output],
+				hls::stream<myDatatype>    		 &Buffer_stream,
+				hls::stream<myDatatype>    		 &OverallOutput_stream);
 	};
 }
 

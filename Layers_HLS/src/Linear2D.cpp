@@ -14,6 +14,8 @@ namespace YKHLS{
 			hls::stream<myDatatype>    	&output_stream)
 	{
 		myDatatype feature[dim_input];
+		#pragma HLS ARRAY_PARTITION variable=feature dim=0 complete
+
 		for (int i = 0; i < dim_input; i++){
 			feature[i] = input_stream.read();
 		}

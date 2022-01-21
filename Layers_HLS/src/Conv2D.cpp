@@ -326,24 +326,18 @@ namespace YKHLS{
 		}
 	}
 
-
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
 				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::operator()(
+	void Conv2D<width_filter, height_filter, channel_input, channel_output>::ExecuteConv(
 			const myDatatype                 Wconv[channel_output][channel_input][height_filter*width_filter],
 			const myDatatype                 Bconv[channel_output],
-			hls::stream<myDatatype>    		 &input_stream,
+			hls::stream<myDatatype>    		 &Buffer_stream,
 			hls::stream<myDatatype>    		 &OverallOutput_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
-	#pragma HLS DATAFLOW
+		hls::stream<myDatatype, 10> ChannelOutput_stream("ChannelOutput_stream");
 
-		hls::stream<myDatatype> Buffer_stream("Buffer_stream");
-		hls::stream<myDatatype> ChannelOutput_stream("ChannelOutput_stream");
-
-		pixelBuffer(input_stream, Buffer_stream);
 		// Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
 		for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
 			// Execute convolution for a kernel
@@ -358,6 +352,27 @@ namespace YKHLS{
 			}
 			// Summation module sum the value in the same coordinate up then add by the bias
 			summation(Bconv[channel_num_o], width_output, height_output, channel_input, ChannelOutput_stream, OverallOutput_stream);
+//			Filter2DKernel(Wconv[channel_num_o][0], Buffer_stream, OverallOutput_stream);
 		}
+
+	}
+
+	template<	unsigned short 				width_filter,
+				unsigned short 				height_filter,
+				unsigned short 				channel_input,
+				unsigned short 				channel_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output>::operator()(
+			const myDatatype                 Wconv[channel_output][channel_input][height_filter*width_filter],
+			const myDatatype                 Bconv[channel_output],
+			hls::stream<myDatatype>    		 &input_stream,
+			hls::stream<myDatatype>    		 &OverallOutput_stream)
+	{
+	#pragma HLS interface ap_ctrl_none port=return
+	#pragma HLS DATAFLOW
+
+		hls::stream<myDatatype, 10> Buffer_stream("Buffer_stream");
+
+		pixelBuffer(input_stream, Buffer_stream);
+		ExecuteConv(Wconv, Bconv, Buffer_stream, OverallOutput_stream);
 	}
 }

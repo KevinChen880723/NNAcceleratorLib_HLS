@@ -24,4 +24,4 @@
 
 //typedef ap_fixed<13, 8, AP_RND_ZERO, AP_SAT> myDatatype;
 typedef float myDatatype;
-typedef hls::stream<myDatatype> myStream;
+typedef hls::stream<myDatatype, 10> myStream;
