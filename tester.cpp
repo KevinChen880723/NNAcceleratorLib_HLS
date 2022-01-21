@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc, char *argv[]){
 	bool pass = 1;
 	int num_pixels = IMAGE_WIDTH*IMAGE_HEIGHT;
-	int num_outputPixels = 8*12*12;
+	int num_outputPixels = 10;
 
 	fstream fs;
 	string data;
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
 	MNIST(imgArray, outputArray);
 
 	// Read the ground truth of conv1's output
-	fs.open("C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/hlsTest_float_folder/pool1_output.txt");
+	fs.open("C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/hlsTest_float_folder/fc_output.txt");
 	for (int i = 0; i < num_outputPixels; i++){
 		getline(fs, data);
 		myDatatype data_GT = myDatatype(stof(data));
