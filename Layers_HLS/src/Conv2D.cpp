@@ -92,7 +92,7 @@ namespace YKHLS{
 	#pragma HLS interface ap_ctrl_none port=return
 
 		// Line buffers - used to store [height_filter-1] entire lines of pixels
-		myDatatype LineBuffer[height_filter-1][IMAGE_WIDTH];
+		myDatatype LineBuffer[height_filter-1][width_input];
 		// Use this pragma to partition the physical memory of LineBuffer into many separate memory blocks.
 	#pragma HLS ARRAY_PARTITION variable=LineBuffer dim=1 complete
 	#pragma HLS DEPENDENCE variable=LineBuffer inter false
