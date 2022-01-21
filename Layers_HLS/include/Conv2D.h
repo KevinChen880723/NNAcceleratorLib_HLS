@@ -9,15 +9,15 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
 	class Conv2D{
 	public:
 
 		Conv2D();
-		Conv2D(	unsigned short 				width_input,
-				unsigned short 				height_input,
-				unsigned short 				width_output,
-				unsigned short 				height_output);
 
 		void operator()(
 				const myDatatype            Wconv[channel_output][channel_input][height_filter*width_filter],
@@ -25,10 +25,7 @@ namespace YKHLS{
 				hls::stream<myDatatype>    	&input_stream,
 				hls::stream<myDatatype>    	&OverallOutput_stream);
 	private:
-		unsigned short width_input;
-		unsigned short height_input;
-		unsigned short width_output;
-		unsigned short height_output;
+		int i;
 
 		typedef struct window {
 		    myDatatype pix[height_filter][width_filter];
@@ -63,6 +60,7 @@ namespace YKHLS{
 				hls::stream<myDatatype>     &output_stream);
 
 		void summation(
+				myDatatype 					outputFeature[height_output][width_output],
 				const myDatatype            bias,
 				unsigned short           	width,
 				unsigned short           	height,

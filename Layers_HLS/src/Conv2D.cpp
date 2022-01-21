@@ -18,43 +18,29 @@
 #include "hls_stream.h"
 
 #ifndef __SYNTHESIS__
-//	#define PRINT
+	#define PRINT
 #endif
 
 namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	Conv2D<width_filter, height_filter, channel_input, channel_output>::Conv2D()
-	{
-		width_input = 28;
-		height_input = 28;
-		width_output = 26;
-		height_output = 26;
-	}
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::Conv2D(){}
 
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	Conv2D<width_filter, height_filter, channel_input, channel_output>::Conv2D(
-				unsigned short 				W_i,
-				unsigned short 				H_i,
-				unsigned short 				W_o,
-				unsigned short 				H_o)
-	{
-		width_input = W_i;
-		height_input = H_i;
-		width_output = W_o;
-		height_output = H_o;
-	}
-
-	template<	unsigned short 				width_filter,
-				unsigned short 				height_filter,
-				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::ReadFromMem(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::ReadFromMem(
 				unsigned short            	width,
 				unsigned short            	height,
 				const myDatatype            weights[height_filter*width_filter],
@@ -62,7 +48,7 @@ namespace YKHLS{
 				hls::stream<myDatatype>     &coeff_stream,
 				hls::stream<myDatatype>     &pixel_stream )
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+//	#pragma HLS interface ap_ctrl_none port=return
 		unsigned short num_coefs = height_filter*width_filter;
 		read_coefs: for (int i=0; i<num_coefs; i++) {
 			myDatatype coef = weights[i];
@@ -70,6 +56,7 @@ namespace YKHLS{
 		}
 
 		read_image: for (int n = 0; n < height*width; n++) {
+#pragma HLS PIPELINE II=1
 			myDatatype pix = input_stream.read();
 			#ifdef PRINT
 				std::cout << "pix in ReadFromMem: " << pix << std::endl;
@@ -81,15 +68,19 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::Window2D(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::Window2D(
 			unsigned short          	width,
 			unsigned short          	height,
 			hls::stream<myDatatype>   	&pixel_stream,
 			hls::stream<window>     	&window_stream,
 			ap_int<1>               	do_padding)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+//	#pragma HLS interface ap_ctrl_none port=return
 
 		// Line buffers - used to store [height_filter-1] entire lines of pixels
 		myDatatype LineBuffer[height_filter-1][width_input];
@@ -157,8 +148,12 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::Filter2D(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::Filter2D(
 			unsigned short              width,
 			unsigned short              height,
 			hls::stream<myDatatype>     &coeff_stream,
@@ -166,7 +161,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>     &output_stream,
 			ap_int<1>                   do_padding)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+//	#pragma HLS interface ap_ctrl_none port=return
 
 		// Filtering coefficients
 		myDatatype coeffs[height_filter][width_filter];
@@ -242,13 +237,17 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::Filter2DKernel(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::Filter2DKernel(
 			const myDatatype            Wconv[height_filter*width_filter],
 			hls::stream<myDatatype>     &input_stream,
 			hls::stream<myDatatype>     &output_stream)
 		{
-	#pragma HLS interface ap_ctrl_none port=return
+//	#pragma HLS interface ap_ctrl_none port=return
 //	#pragma HLS DATAFLOW
 
 		// Stream of pixels from kernel input to filter, and from filter to output
@@ -269,8 +268,13 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::summation(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::summation(
+			myDatatype 					outputFeature[height_output][width_output],
 			const myDatatype            bias,
 			unsigned short           	width,
 			unsigned short           	height,
@@ -278,15 +282,17 @@ namespace YKHLS{
 			hls::stream<myDatatype>     &ChannelOutput_stream,
 			hls::stream<myDatatype>     &OverallOutput_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+//	#pragma HLS interface ap_ctrl_none port=return
 
-		myDatatype outputFeature[height][width];
+//		myDatatype outputFeature[height][width];
 		for(int c = 0; c < num_channel; c++){
 			for(int y = 0; y < height; y++){
 				for(int x = 0; x < width; x++){
-					if (c == 0) outputFeature[y][x] = ChannelOutput_stream.read();
+		#pragma HLS PIPELINE II=1
+					myDatatype pix = ChannelOutput_stream.read();
+					if (c == 0) outputFeature[y][x] = pix;
 					else{
-						outputFeature[y][x] += ChannelOutput_stream.read();
+						outputFeature[y][x] += pix;
 					}
 					if (c == num_channel-1){
 						OverallOutput_stream.write(outputFeature[y][x] + bias);
@@ -302,18 +308,25 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::pixelBuffer(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::pixelBuffer(
 			hls::stream<myDatatype>     &input_stream,
 			hls::stream<myDatatype>     &Buffer_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
-
-		myDatatype inputBuffer[channel_input][height_input][width_input];
+//	#pragma HLS interface ap_ctrl_none port=return
+		const unsigned short channel_input_const = channel_input;
+		const unsigned short height_input_const = height_input;
+		const unsigned short width_input_const = width_input;
+		myDatatype inputBuffer[channel_input_const][height_input_const][width_input_const];
 		for (int c_o = 0; c_o < channel_output; c_o++){
 			for (int c_i = 0; c_i < channel_input; c_i++){
 				for (int y = 0; y < height_input; y++){
 					for (int x = 0; x < width_input; x++){
+#pragma HLS PIPELINE II=1
 						if (c_o == 0){
 							myDatatype temp = input_stream.read();
 							Buffer_stream.write(temp);
@@ -329,30 +342,27 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::ExecuteConv(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::ExecuteConv(
 			const myDatatype                 Wconv[channel_output][channel_input][height_filter*width_filter],
 			const myDatatype                 Bconv[channel_output],
 			hls::stream<myDatatype>    		 &Buffer_stream,
 			hls::stream<myDatatype>    		 &OverallOutput_stream)
 	{
 		hls::stream<myDatatype, 10> ChannelOutput_stream("ChannelOutput_stream");
-
+		myDatatype sumBuffer[height_input-2][width_input-2];
 		// Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
 		for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
 			// Execute convolution for a kernel
 			for (int channel_num_i = 0; channel_num_i < channel_input; channel_num_i++){
 				// Do convolution on every channels, then send the output stream to summation module
-				#ifdef PRINT
-					std::cout << "================================================================================================" << std::endl;
-					std::cout << "========================================= kernel: " << channel_num_o << " ============================================" << std::endl;
-					std::cout << "================================================================================================" << std::endl;
-				#endif
-				Filter2DKernel(Wconv[channel_num_o][channel_num_i], Buffer_stream, ChannelOutput_stream);
+				Filter2DKernel(Wconv[channel_num_o][0], Buffer_stream, ChannelOutput_stream);
 			}
-			// Summation module sum the value in the same coordinate up then add by the bias
-			summation(Bconv[channel_num_o], width_output, height_output, channel_input, ChannelOutput_stream, OverallOutput_stream);
-//			Filter2DKernel(Wconv[channel_num_o][0], Buffer_stream, OverallOutput_stream);
+			summation(sumBuffer, Bconv[channel_num_o], width_output, height_output, channel_input, ChannelOutput_stream, OverallOutput_stream);
 		}
 
 	}
@@ -360,17 +370,21 @@ namespace YKHLS{
 	template<	unsigned short 				width_filter,
 				unsigned short 				height_filter,
 				unsigned short 				channel_input,
-				unsigned short 				channel_output>
-	void Conv2D<width_filter, height_filter, channel_input, channel_output>::operator()(
+				unsigned short 				channel_output,
+				unsigned short 				width_input,
+				unsigned short 				height_input,
+				unsigned short 				width_output,
+				unsigned short 				height_output>
+	void Conv2D<width_filter, height_filter, channel_input, channel_output, width_input, height_input, width_output, height_output>::operator()(
 			const myDatatype                 Wconv[channel_output][channel_input][height_filter*width_filter],
 			const myDatatype                 Bconv[channel_output],
 			hls::stream<myDatatype>    		 &input_stream,
 			hls::stream<myDatatype>    		 &OverallOutput_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+//	#pragma HLS interface ap_ctrl_none port=return
 	#pragma HLS DATAFLOW
 
-		hls::stream<myDatatype, 10> Buffer_stream("Buffer_stream");
+		hls::stream<myDatatype, 1000> Buffer_stream("Buffer_stream");
 
 		pixelBuffer(input_stream, Buffer_stream);
 		ExecuteConv(Wconv, Bconv, Buffer_stream, OverallOutput_stream);
