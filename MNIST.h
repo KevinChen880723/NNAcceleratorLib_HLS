@@ -37,5 +37,5 @@
 //	#include "./weight/fc.bias.h"
 //};
 
-void MNIST(myDatatype *img, myDatatype *output);
+void MNIST(ap_uint<8> *img, myDatatype *output);
 

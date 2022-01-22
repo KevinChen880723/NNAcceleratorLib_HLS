@@ -40,6 +40,24 @@ namespace YKHLS{
 			  unsigned short    width_input,
 			  unsigned short    height_input,
 			  unsigned short    channel_input>
+	void MaxPool2D<width_filter, height_filter, width_input, height_input, channel_input>::FillWindow(
+					int x,
+					int y,
+					window &Window,
+					myDatatype LineBuffer[height_filter][width_input])
+	{
+		for (int h_f = 0; h_f < height_filter; h_f++){
+			for (int w_f = 0; w_f < width_filter; w_f++){
+				Window.pix[h_f][w_f] = LineBuffer[y-(height_filter-1)+h_f][x-(width_filter-1)+w_f];
+			}
+		}
+	}
+
+	template< unsigned short 	width_filter,
+			  unsigned short 	height_filter,
+			  unsigned short    width_input,
+			  unsigned short    height_input,
+			  unsigned short    channel_input>
 	void MaxPool2D<width_filter, height_filter, width_input, height_input, channel_input>::Window2D(
 					hls::stream<myDatatype>   	&pixel_stream,
 					hls::stream<window>     	&window_stream)
@@ -63,19 +81,17 @@ namespace YKHLS{
 					#endif
 					if (row == height_filter-1 && col == width_filter-1){
 						// load the corresponding pixels in LineBuffer into Window
-						for (int h_f = 0; h_f < height_filter; h_f++){
-							for (int w_f = 0; w_f < width_filter; w_f++){
-								Window.pix[h_f][w_f] = LineBuffer[row-(height_filter-1)+h_f][x-(width_filter-1)+w_f];
-							}
-						}
+						FillWindow(x, row, Window, LineBuffer);
 						// Write Window into hls::stream
 						window_stream.write(Window);
 					}
 					if (col == width_filter-1 || x == width_input-1) col = 0;
 					else col++;
+					if (x == width_input-1){
+						if (row == height_filter-1) row = 0;
+						else row++;
+					}
 				}
-				if (row == height_filter-1) row = 0;
-				else row++;
 			}
 		}
 
@@ -143,8 +159,8 @@ namespace YKHLS{
 #pragma HLS interface ap_ctrl_none port=return
 #endif
 	#pragma HLS dataflow
-		hls::stream<myDatatype> pixel_stream("pixel_stream");
-		hls::stream<window>     window_stream("window_stream");
+		hls::stream<myDatatype, 10000> pixel_stream("pixel_stream");
+		hls::stream<window, 10000>     window_stream("window_stream");
 		ReadFromMem(input_stream, pixel_stream);
 		Window2D(pixel_stream, window_stream);
 		Filter2D(window_stream, output_stream);

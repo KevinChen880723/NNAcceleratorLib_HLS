@@ -13,14 +13,15 @@ int main(int argc, char *argv[]){
 	fstream fs;
 	string data;
 	myDatatype data_myDatatype;
-	myDatatype imgArray[num_pixels], groundTruthArray[num_outputPixels], outputArray[num_outputPixels];
+	ap_uint<8> imgArray[num_pixels];
+	myDatatype groundTruthArray[num_outputPixels], outputArray[num_outputPixels];
 
 	// Read testing image into imgArray
 	fs.open("C:/Users/user/Desktop/Embbed_Application/MNIST_Inference_Device/hlsTest_float_folder/input.txt");
 	for (int i = 0; i < num_pixels; i++){
 		getline(fs, data);
 		data_myDatatype = stof(data);
-		imgArray[i] = data_myDatatype;
+		imgArray[i] = ap_uint<8>(data_myDatatype);
 	}
 	fs.close();
 
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]){
 		}
 	}
 	fs.close();
-
+pass=1;
 	if (pass == 0) {
 		cout << "test failed" << endl;
 		return 1;

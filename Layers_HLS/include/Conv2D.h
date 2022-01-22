@@ -62,15 +62,17 @@ namespace YKHLS{
 		void summation(
 				myDatatype 					outputFeature[height_output][width_output],
 				const myDatatype            bias,
-				unsigned short           	width,
-				unsigned short           	height,
-				unsigned short           	num_channel,
 				hls::stream<myDatatype>     &ChannelOutput_stream,
 				hls::stream<myDatatype>     &OverallOutput_stream);
 
 		void pixelBuffer(
 				hls::stream<myDatatype>     &input_stream,
 				hls::stream<myDatatype>     &Buffer_stream);
+
+		void ConvolutionWithoutSum(
+				const myDatatype                 Kernel[channel_input][height_filter*width_filter],
+				hls::stream<myDatatype>    		 &Buffer_stream,
+				hls::stream<myDatatype>    		 &ChannelOutput_stream);
 
 		void ExecuteConv(
 				const myDatatype                 Wconv[channel_output][channel_input][height_filter*width_filter],

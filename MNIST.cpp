@@ -7,7 +7,7 @@
 #define RUN_CO_SIM
 
 void readMemory(
-		myDatatype 	  	      *img,
+		ap_uint<8> 	  	      *img,
 		unsigned short	      width_input,
 		unsigned short	      height_input,
 		hls::stream<myDatatype> &pixel_stream)
@@ -15,7 +15,8 @@ void readMemory(
 #ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
 #endif
-	for (int i = 0; i < width_input*height_input; i++){
+	for (ap_uint<10> i = 0; i < width_input*height_input; i++){
+#pragma HLS PIPELINE II=1
 		myDatatype data = img[i];
 		pixel_stream.write(data);
 		#ifdef PRINT
@@ -43,10 +44,8 @@ void WriteToMem(
     }
 }
 
-void MNIST(myDatatype *img, myDatatype *output){
-#ifndef RUN_CO_SIM
-#pragma HLS interface ap_ctrl_none port=return
-#endif
+void MNIST(ap_uint<8> *img, myDatatype *output){
+#pragma HLS interface ap_ctrl_chain port=return
 #pragma HLS interface m_axi depth=1024 port=img
 #pragma HLS interface m_axi depth=16 port=output
 #pragma HLS dataflow
@@ -96,18 +95,18 @@ void MNIST(myDatatype *img, myDatatype *output){
 	YKHLS::Linear2D<10, 64> fc;
 
 	// Declare hls::stream object which will used later
-	myStream conv1_input_stream("conv1_input_stream");
-	myStream conv1_output_stream("conv1_output_stream");
-	myStream conv2_input_stream("conv2_input_stream");
-	myStream conv2_output_stream("conv2_output_stream");
-	myStream maxpool1_input_stream("maxpool1_input_stream");
-	myStream maxpool1_output_stream("maxpool1_output_stream");
-	myStream conv3_output_stream("conv3_output_stream");
-	myStream conv4_input_stream("conv4_input_stream");
-	myStream conv4_output_stream("conv4_output_stream");
-	myStream relu4_output_stream("relu4_output_stream");
-	myStream fc_input_stream("fc_input_stream");
-	myStream output_stream("output_stream");
+	hls::stream<myDatatype, 2> conv1_input_stream("conv1_input_stream");
+	hls::stream<myDatatype, 10000> conv1_output_stream("conv1_output_stream");
+	hls::stream<myDatatype, 10000> conv2_input_stream("conv2_input_stream");
+	hls::stream<myDatatype, 10000> conv2_output_stream("conv2_output_stream");
+	hls::stream<myDatatype, 10000> maxpool1_input_stream("maxpool1_input_stream");
+	hls::stream<myDatatype, 10000> maxpool1_output_stream("maxpool1_output_stream");
+	hls::stream<myDatatype, 10000> conv3_output_stream("conv3_output_stream");
+	hls::stream<myDatatype, 10000> conv4_input_stream("conv4_input_stream");
+	hls::stream<myDatatype, 10000> conv4_output_stream("conv4_output_stream");
+	hls::stream<myDatatype, 10000> relu4_output_stream("relu4_output_stream");
+	hls::stream<myDatatype, 10000> fc_input_stream("fc_input_stream");
+	hls::stream<myDatatype, 10000> output_stream("output_stream");
 
 	// Main Procedures of Inferencing
 	readMemory(img, IMAGE_WIDTH, IMAGE_HEIGHT, conv1_input_stream);
