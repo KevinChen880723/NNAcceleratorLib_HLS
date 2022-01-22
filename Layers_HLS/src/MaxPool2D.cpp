@@ -5,6 +5,7 @@ namespace YKHLS{
 	#ifndef __SYNTHESIS__
 //		#define PRINT
 	#endif
+#define RUN_CO_SIM
 
 	template< unsigned short 	width_filter,
 			  unsigned short 	height_filter,
@@ -22,7 +23,9 @@ namespace YKHLS{
 					hls::stream<myDatatype>     &input_stream,
 					hls::stream<myDatatype>     &pixel_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+#ifndef RUN_CO_SIM
+#pragma HLS interface ap_ctrl_none port=return
+#endif
 		for (int i = 0; i < channel_input*height_input*width_input; i++){
 			myDatatype pix = input_stream.read();
 			#ifdef PRINT
@@ -41,7 +44,9 @@ namespace YKHLS{
 					hls::stream<myDatatype>   	&pixel_stream,
 					hls::stream<window>     	&window_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+#ifndef RUN_CO_SIM
+#pragma HLS interface ap_ctrl_none port=return
+#endif
 		const unsigned short height_filter_const = height_filter;
 		const unsigned short width_input_const = width_input;
 		myDatatype LineBuffer[height_filter_const][width_input_const];
@@ -85,7 +90,9 @@ namespace YKHLS{
 				hls::stream<window>         &window_stream,
 				hls::stream<myDatatype>     &result_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+#ifndef RUN_CO_SIM
+#pragma HLS interface ap_ctrl_none port=return
+#endif
 		for (int c = 0; c < channel_input; c++){
 			for (int y = 0; y < height_input/height_filter; y++){
 				for (int x = 0; x < width_input/width_filter; x++){
@@ -132,7 +139,9 @@ namespace YKHLS{
 				hls::stream<myDatatype>    	&input_stream,
 				hls::stream<myDatatype>     &output_stream)
 	{
-	#pragma HLS interface ap_ctrl_none port=return
+#ifndef RUN_CO_SIM
+#pragma HLS interface ap_ctrl_none port=return
+#endif
 	#pragma HLS dataflow
 		hls::stream<myDatatype> pixel_stream("pixel_stream");
 		hls::stream<window>     window_stream("window_stream");

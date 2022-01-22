@@ -4,6 +4,7 @@
 #ifndef __SYNTHESIS__
 //	#define PRINT
 #endif
+#define RUN_CO_SIM
 
 void readMemory(
 		myDatatype 	  	      *img,
@@ -11,7 +12,9 @@ void readMemory(
 		unsigned short	      height_input,
 		hls::stream<myDatatype> &pixel_stream)
 {
+#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
+#endif
 	for (int i = 0; i < width_input*height_input; i++){
 		myDatatype data = img[i];
 		pixel_stream.write(data);
@@ -28,7 +31,9 @@ void WriteToMem(
         hls::stream<myDatatype>     &pixel_stream,
 		myDatatype                  *dst)
 {
+#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
+#endif
     write_image: for (int n = 0; n < num_channel*height*width; n++) {
     	myDatatype pix = pixel_stream.read();
 		#ifdef PRINT
@@ -39,9 +44,11 @@ void WriteToMem(
 }
 
 void MNIST(myDatatype *img, myDatatype *output){
+#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#pragma HLS interface m_axi depth=50 port=img
-#pragma HLS interface m_axi depth=50 port=output
+#endif
+#pragma HLS interface m_axi depth=1024 port=img
+#pragma HLS interface m_axi depth=16 port=output
 #pragma HLS dataflow
 
 	const myDatatype Wconv1[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
