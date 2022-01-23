@@ -20,7 +20,6 @@
 #ifndef __SYNTHESIS__
 //	#define PRINT
 #endif
-#define RUN_CO_SIM
 
 namespace YKHLS{
 	template<	unsigned short 				width_filter,
@@ -49,9 +48,7 @@ namespace YKHLS{
 				hls::stream<myDatatype>     &coeff_stream,
 				hls::stream<myDatatype>     &pixel_stream )
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 		unsigned short num_coefs = height_filter*width_filter;
 		read_coefs: for (int i=0; i<num_coefs; i++) {
 			myDatatype coef = weights[i];
@@ -83,9 +80,7 @@ namespace YKHLS{
 			hls::stream<window>     	&window_stream,
 			ap_int<1>               	do_padding)
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 		// Line buffers - used to store [height_filter-1] entire lines of pixels
 		myDatatype LineBuffer[height_filter-1][width_input];
 		// Use this pragma to partition the physical memory of LineBuffer into many separate memory blocks.
@@ -165,9 +160,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>     &output_stream,
 			ap_int<1>                   do_padding)
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 		// Filtering coefficients
 		myDatatype coeffs[height_filter][width_filter];
 	#pragma HLS ARRAY_PARTITION variable=coeffs complete dim=0
@@ -252,15 +245,13 @@ namespace YKHLS{
 			hls::stream<myDatatype>     &input_stream,
 			hls::stream<myDatatype>     &output_stream)
 		{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 //	#pragma HLS DATAFLOW
 
 		// Stream of pixels from kernel input to filter, and from filter to output
-		hls::stream<myDatatype,2>      coefs_stream("coefs_stream");
-		hls::stream<myDatatype,2>      pixel_stream("pixel_stream");
-		hls::stream<window,3>        window_stream("window_stream"); // Set FIFO depth to 0 to minimize resources
+		hls::stream<myDatatype,10>      coefs_stream("coefs_stream");
+		hls::stream<myDatatype,10>      pixel_stream("pixel_stream");
+		hls::stream<window,10>        window_stream("window_stream"); // Set FIFO depth to 0 to minimize resources
 
 		// Read image data from global memory over AXI4 MM, and stream pixels out
 		ReadFromMem(width_input, height_input, Wconv, input_stream, coefs_stream, pixel_stream);
@@ -286,9 +277,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>     &ChannelOutput_stream,
 			hls::stream<myDatatype>     &OverallOutput_stream)
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 		for(int c = 0; c < channel_input; c++){
 			for(int y = 0; y < height_output; y++){
 				for(int x = 0; x < width_output; x++){
@@ -321,9 +310,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>     &input_stream,
 			hls::stream<myDatatype>     &Buffer_stream)
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 		const unsigned short channel_input_const = channel_input;
 		const unsigned short height_input_const = height_input;
 		const unsigned short width_input_const = width_input;
@@ -378,9 +365,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>    		 &Buffer_stream,
 			hls::stream<myDatatype>    		 &OverallOutput_stream)
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 		hls::stream<myDatatype, 10> ChannelOutput_stream("ChannelOutput_stream");
 		myDatatype sumBuffer[height_output][width_output];
 		// Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
@@ -405,12 +390,10 @@ namespace YKHLS{
 			hls::stream<myDatatype>    		 &input_stream,
 			hls::stream<myDatatype>    		 &OverallOutput_stream)
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 	#pragma HLS DATAFLOW
 
-		hls::stream<myDatatype, 2*5> Buffer_stream("Buffer_stream");
+		hls::stream<myDatatype, 10> Buffer_stream("Buffer_stream");
 
 		pixelBuffer(input_stream, Buffer_stream);
 		ExecuteConv(Wconv, Bconv, Buffer_stream, OverallOutput_stream);

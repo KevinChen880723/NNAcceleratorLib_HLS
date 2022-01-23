@@ -34,11 +34,11 @@ int main(int argc, char *argv[]){
 		myDatatype data_GT = myDatatype(stof(data));
 		if (data_GT - outputArray[i] > 0.0001 || data_GT - outputArray[i] < -0.0001){
 			pass = 0;
-			cout << "In iteration: " << i << endl;
-			cout << "data_GT is: " << data_GT << endl;
-			cout << "outputArray[i] is: " << outputArray[i] << endl;
-			break;
+
 		}
+		cout << "In iteration: " << i << endl;
+		cout << "data_GT is: " << data_GT << endl;
+		cout << "outputArray[i] is: " << outputArray[i] << endl;
 	}
 	fs.close();
 pass=1;

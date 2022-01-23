@@ -12,9 +12,7 @@ void readMemory(
 		unsigned short	      height_input,
 		hls::stream<myDatatype> &pixel_stream)
 {
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 	for (ap_uint<10> i = 0; i < width_input*height_input; i++){
 #pragma HLS PIPELINE II=1
 		myDatatype data = img[i];
@@ -32,9 +30,7 @@ void WriteToMem(
         hls::stream<myDatatype>     &pixel_stream,
 		myDatatype                  *dst)
 {
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
     write_image: for (int n = 0; n < num_channel*height*width; n++) {
     	myDatatype pix = pixel_stream.read();
 		#ifdef PRINT
@@ -45,9 +41,10 @@ void WriteToMem(
 }
 
 void MNIST(ap_uint<8> *img, myDatatype *output){
-#pragma HLS interface ap_ctrl_chain port=return
+	// The ports using AXI-Master needed AXI-Lite to program the base address.
+#pragma HLS interface s_axilite port=return
 #pragma HLS interface m_axi depth=1024 port=img
-#pragma HLS interface m_axi depth=16 port=output
+#pragma HLS interface m_axi depth=1024 port=output
 #pragma HLS dataflow
 
 	const myDatatype Wconv1[layer2ChannelNum][layer1ChannelNum][FILTER_V_SIZE*FILTER_H_SIZE] = {
@@ -95,32 +92,32 @@ void MNIST(ap_uint<8> *img, myDatatype *output){
 	YKHLS::Linear2D<10, 64> fc;
 
 	// Declare hls::stream object which will used later
-	hls::stream<myDatatype, 2> conv1_input_stream("conv1_input_stream");
-	hls::stream<myDatatype, 10000> conv1_output_stream("conv1_output_stream");
-	hls::stream<myDatatype, 10000> conv2_input_stream("conv2_input_stream");
-	hls::stream<myDatatype, 10000> conv2_output_stream("conv2_output_stream");
-	hls::stream<myDatatype, 10000> maxpool1_input_stream("maxpool1_input_stream");
-	hls::stream<myDatatype, 10000> maxpool1_output_stream("maxpool1_output_stream");
-	hls::stream<myDatatype, 10000> conv3_output_stream("conv3_output_stream");
-	hls::stream<myDatatype, 10000> conv4_input_stream("conv4_input_stream");
-	hls::stream<myDatatype, 10000> conv4_output_stream("conv4_output_stream");
-	hls::stream<myDatatype, 10000> relu4_output_stream("relu4_output_stream");
-	hls::stream<myDatatype, 10000> fc_input_stream("fc_input_stream");
-	hls::stream<myDatatype, 10000> output_stream("output_stream");
+	hls::stream<myDatatype, 28*28> memory_stream("memory_stream");
+	hls::stream<myDatatype, 10> conv1_output_stream("conv1_output_stream");
+	hls::stream<myDatatype, 26*26*10> relu1_output_stream("relu1_output_stream");
+	hls::stream<myDatatype, 10> conv2_output_stream("conv2_output_stream");
+	hls::stream<myDatatype, 10> relu2_output_stream("relu2_output_stream");
+	hls::stream<myDatatype, 12*12*8> maxpool1_output_stream("maxpool1_output_stream");
+	hls::stream<myDatatype, 10> conv3_output_stream("conv3_output_stream");
+	hls::stream<myDatatype, 10*10*6> relu3_output_stream("relu3_output_stream");
+	hls::stream<myDatatype, 10> conv4_output_stream("conv4_output_stream");
+	hls::stream<myDatatype, 10> relu4_output_stream("relu4_output_stream");
+	hls::stream<myDatatype, 10> maxpool2_output_stream("maxpool2_output_stream");
+	hls::stream<myDatatype, 10> fc_output_stream("fc_output_stream");
 
 	// Main Procedures of Inferencing
-	readMemory(img, IMAGE_WIDTH, IMAGE_HEIGHT, conv1_input_stream);
-	conv1(Wconv1, Bconv1, conv1_input_stream, conv1_output_stream);
-	relu1(conv1_output_stream, conv2_input_stream);
-	conv2(Wconv2, Bconv2, conv2_input_stream, conv2_output_stream);
-	relu2(conv2_output_stream, maxpool1_input_stream);
-	maxpool1(maxpool1_input_stream, maxpool1_output_stream);
+	readMemory(img, IMAGE_WIDTH, IMAGE_HEIGHT, memory_stream);
+	conv1(Wconv1, Bconv1, memory_stream, conv1_output_stream);
+	relu1(conv1_output_stream, relu1_output_stream);
+	conv2(Wconv2, Bconv2, relu1_output_stream, conv2_output_stream);
+	relu2(conv2_output_stream, relu2_output_stream);
+	maxpool1(relu2_output_stream, maxpool1_output_stream);
 	conv3(Wconv3, Bconv3, maxpool1_output_stream, conv3_output_stream);
-	relu3(conv3_output_stream, conv4_input_stream);
-	conv4(Wconv4, Bconv4, conv4_input_stream, conv4_output_stream);
+	relu3(conv3_output_stream, relu3_output_stream);
+	conv4(Wconv4, Bconv4, relu3_output_stream, conv4_output_stream);
 	relu4(conv4_output_stream, relu4_output_stream);
-	maxpool2(relu4_output_stream, fc_input_stream);
-	fc(Wfc4, Bfc4, fc_input_stream, output_stream);
-	WriteToMem(1, 1, 10, output_stream, output);
+	maxpool2(relu4_output_stream, maxpool2_output_stream);
+	fc(Wfc4, Bfc4, maxpool2_output_stream, fc_output_stream);
+	WriteToMem(1, 1, 10, fc_output_stream, output);
 	return;
 }

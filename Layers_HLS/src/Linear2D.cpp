@@ -1,5 +1,4 @@
 #include "../include/Linear2D.h"
-#define RUN_CO_SIM
 namespace YKHLS{
 	template< unsigned short dim_output,
 			  unsigned short dim_input>
@@ -13,9 +12,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>    	&input_stream,
 			hls::stream<myDatatype>    	&output_stream)
 	{
-#ifndef RUN_CO_SIM
 #pragma HLS interface ap_ctrl_none port=return
-#endif
 		myDatatype feature[dim_input];
 //		#pragma HLS ARRAY_PARTITION variable=feature dim=0 block factor=8
 
