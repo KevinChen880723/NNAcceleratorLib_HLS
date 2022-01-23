@@ -366,7 +366,7 @@ namespace YKHLS{
 			hls::stream<myDatatype>    		 &OverallOutput_stream)
 	{
 #pragma HLS interface ap_ctrl_none port=return
-		hls::stream<myDatatype, 55000> ChannelOutput_stream("ChannelOutput_stream");
+		hls::stream<myDatatype, channel_input*channel_output*width_input*height_input> ChannelOutput_stream("ChannelOutput_stream");
 		myDatatype sumBuffer[height_output][width_output];
 		// Execute convolution <layer2CnannelNum> times to get the output with <layer2CnannelNum> channels
 		for(int channel_num_o = 0; channel_num_o < channel_output; channel_num_o++){
@@ -393,7 +393,7 @@ namespace YKHLS{
 #pragma HLS interface ap_ctrl_none port=return
 	#pragma HLS DATAFLOW
 
-		hls::stream<myDatatype, 55000> Buffer_stream("Buffer_stream");
+		hls::stream<myDatatype, 10> Buffer_stream("Buffer_stream");
 
 		pixelBuffer(input_stream, Buffer_stream);
 		ExecuteConv(Wconv, Bconv, Buffer_stream, OverallOutput_stream);
