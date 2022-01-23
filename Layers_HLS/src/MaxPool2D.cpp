@@ -150,8 +150,8 @@ namespace YKHLS{
 	{
 #pragma HLS interface ap_ctrl_none port=return
 	#pragma HLS dataflow
-		hls::stream<myDatatype, 10> pixel_stream("pixel_stream");
-		hls::stream<window, 10>     window_stream("window_stream");
+		hls::stream<myDatatype, 55000> pixel_stream("pixel_stream");
+		hls::stream<window, 55000>     window_stream("window_stream");
 		ReadFromMem(input_stream, pixel_stream);
 		Window2D(pixel_stream, window_stream);
 		Filter2D(window_stream, output_stream);

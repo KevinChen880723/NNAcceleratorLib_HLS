@@ -93,17 +93,17 @@ void MNIST(ap_uint<8> *img, myDatatype *output){
 
 	// Declare hls::stream object which will used later
 	hls::stream<myDatatype, 28*28> memory_stream("memory_stream");
-	hls::stream<myDatatype, 10> conv1_output_stream("conv1_output_stream");
+	hls::stream<myDatatype, 55000> conv1_output_stream("conv1_output_stream");
 	hls::stream<myDatatype, 26*26*10> relu1_output_stream("relu1_output_stream");
-	hls::stream<myDatatype, 10> conv2_output_stream("conv2_output_stream");
-	hls::stream<myDatatype, 10> relu2_output_stream("relu2_output_stream");
+	hls::stream<myDatatype, 55000> conv2_output_stream("conv2_output_stream");
+	hls::stream<myDatatype, 55000> relu2_output_stream("relu2_output_stream");
 	hls::stream<myDatatype, 12*12*8> maxpool1_output_stream("maxpool1_output_stream");
-	hls::stream<myDatatype, 10> conv3_output_stream("conv3_output_stream");
+	hls::stream<myDatatype, 55000> conv3_output_stream("conv3_output_stream");
 	hls::stream<myDatatype, 10*10*6> relu3_output_stream("relu3_output_stream");
-	hls::stream<myDatatype, 10> conv4_output_stream("conv4_output_stream");
-	hls::stream<myDatatype, 10> relu4_output_stream("relu4_output_stream");
-	hls::stream<myDatatype, 10> maxpool2_output_stream("maxpool2_output_stream");
-	hls::stream<myDatatype, 10> fc_output_stream("fc_output_stream");
+	hls::stream<myDatatype, 55000> conv4_output_stream("conv4_output_stream");
+	hls::stream<myDatatype, 55000> relu4_output_stream("relu4_output_stream");
+	hls::stream<myDatatype, 55000> maxpool2_output_stream("maxpool2_output_stream");
+	hls::stream<myDatatype, 55000> fc_output_stream("fc_output_stream");
 
 	// Main Procedures of Inferencing
 	readMemory(img, IMAGE_WIDTH, IMAGE_HEIGHT, memory_stream);
