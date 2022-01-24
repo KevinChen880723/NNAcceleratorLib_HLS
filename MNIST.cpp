@@ -43,6 +43,8 @@ void WriteToMem(
 void MNIST(ap_uint<8> *img, myDatatype *output){
 	// The ports using AXI-Master needed AXI-Lite to program the base address.
 #pragma HLS interface s_axilite port=return
+#pragma HLS interface s_axilite port=img
+#pragma HLS interface s_axilite port=output
 #pragma HLS interface m_axi depth=1024 port=img
 #pragma HLS interface m_axi depth=1024 port=output
 #pragma HLS dataflow

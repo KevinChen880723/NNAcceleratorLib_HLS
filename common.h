@@ -22,7 +22,8 @@
 #define FC1InfeatNum 64
 #define FC1OutfeatNum 10
 
-typedef ap_uint<8> myDatatype;
-//typedef ap_fixed<16, 10, AP_RND_ZERO, AP_SAT> myDatatype;
+//typedef ap_uint<8> myDatatype;
+typedef ap_fixed<16, 10, AP_RND_ZERO, AP_SAT> myDatatype;
+//typedef ap_fixed<20, 12, AP_RND_ZERO, AP_SAT> myDatatype;
 //typedef float myDatatype;
 typedef hls::stream<myDatatype, 10> myStream;
