@@ -7,7 +7,7 @@ This is the hello world project to HLS, I implemented MNIST inference device and
 
 ## NN Architecture
 
-![](https://i.imgur.com/uzVrweO.png)
+![](https://i.imgur.com/uzVrweO.png =80%x)
 
 ## Architecture
 
