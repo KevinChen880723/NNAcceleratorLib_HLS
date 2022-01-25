@@ -3,7 +3,7 @@
 
 ## Introduction to the Project
 
-This is the hello world project to HLS, I implemented MNIST inference device and deployed on PYNQ-z2. In the project, I hand-crafted some core NN API: **Convolution**, **ReLU**, **Max-Pooling**, and **Fully connected layers** by HLS (High Level Synthesis). 
+This is the hello world project to HLS; I implemented the MNIST inference device and deployed it on PYNQ-z2. In the project, I hand-crafted some core NN APIs: **Convolution**, **ReLU**, **Max-Pooling**, and **Fully connected** layers by HLS (High-Level Synthesis).
 
 ## NN Architecture
 
@@ -11,13 +11,13 @@ This is the hello world project to HLS, I implemented MNIST inference device and
 
 ## Architecture
 
-The system developed by the concept of dataflow, which can enable the kernel run efficiently (Each layer no need to wait for previous module finished). For the interface between PS and PL, I used AXI-Master interface. In order to transfer the array data received from AXI-Master to dataflow stream, I used `ReadMem` and `WriteToMem` blocks to make the transformation.
+For the interface between PS and PL, I used AXI-Master interface. The system was developed by the concept of <span style="color:orange">dataflow</span>, which enables the kernel to run efficiently (Each layer does not need to wait for the previous module finished). In order to transfer the array data received from AXI-Master to the dataflow stream, I used ReadMem and WriteToMem blocks to transform.
 
 ![](https://i.imgur.com/NYfLbGR.png)
 
 ### Convolutional Layers
 
-In order to make the convolutional layer run in the streaming way, I used the concept of "Line Buffer" to implement the one-channel convolution. In this way, the convolutional layer can process the data whenever it received a new pixel. After building the one-channel convolution, I implement three-dimensional convolution by sequentially work on every channels.
+In order to make the convolutional layer run in a streaming way, I used the concept of "Line Buffer" to implement the one-channel convolution. In this way, the convolutional layer can process the data whenever it receives a new pixel. After building the one-channel convolution, I implement three-dimensional convolution by sequentially working on every channel.
 
 ![](https://i.imgur.com/nOHPVmK.png)
 
@@ -27,6 +27,6 @@ In order to make the convolutional layer run in the streaming way, I used the co
 
 ## Inference Results
 
-PYNQ-z2 spent 1.5ms to inference on an image and successfully got the correct prediction. Except to the one image testing, I also tested the project on the testing set, the accuracy achieved 98.55667%!
+PYNQ-z2 spent <span style="color:red">1.5ms</span> to inference on an image and successfully got the correct prediction. Except for the one image testing, I also tested the project on the testing set, and the accuracy achieved <span style="color:red">98.55667%</span>!
 
 ![](https://i.imgur.com/eedfY8C.png)
