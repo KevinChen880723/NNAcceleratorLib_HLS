@@ -1,3 +1,8 @@
+# To-do list
 - Solve the bottleneck in the convolutional layer.
 - Use Pipeline strategy in the fully connected layer.
 - Introduce the Ping-Pong buffer in `ReadMem`.
+
+# Current Performance
+
+![](https://i.imgur.com/jTsfJki.png)
