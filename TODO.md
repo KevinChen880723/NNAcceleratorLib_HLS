@@ -1,7 +1,7 @@
 # To-do list
-- Solve the bottleneck in the convolutional layer.
-- Use Pipeline strategy in the fully connected layer.
-- Introduce the Ping-Pong buffer in `ReadMem`.
+- Solve the bottleneck in the convolutional layer: The bottleneck causes the significant usage of BRAM because the deep FIFO is needed..
+- Use Pipeline strategy in the fully connected layer: The current buffer in the FC module can not be completely partitioned, and this causes the limitation of the pipeline.
+- Introduce the Ping-Pong buffer and bursting in `ReadMem`: Access global memory introduces significant overhead, use Ping-Pong buffer to make the module read and write at the same time.
 
 # Current Performance
 
