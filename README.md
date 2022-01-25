@@ -5,6 +5,10 @@
 
 This is the hello world project to HLS, I implemented MNIST inference device and deployed on PYNQ-z2. In the project, I hand-crafted some core NN API: **Convolution**, **ReLU**, **Max-Pooling**, and **Fully connected layers** by HLS (High Level Synthesis). 
 
+## NN Architecture
+
+![](https://i.imgur.com/uzVrweO.png)
+
 ## Architecture
 
 The system developed by the concept of dataflow, which can enable the kernel run efficiently (Each layer no need to wait for previous module finished). For the interface between PS and PL, I used AXI-Master interface. In order to transfer the array data received from AXI-Master to dataflow stream, I used `ReadMem` and `WriteToMem` blocks to make the transformation.
