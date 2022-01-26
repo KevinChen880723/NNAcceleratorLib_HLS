@@ -7,3 +7,11 @@
 # Current Performance
 
 ![](https://i.imgur.com/jTsfJki.png)
+
+# Performance After Changing
+
+## Use Pipeline Strategy In the Fully Connected Layer
+
+For now, I'm not sure why does the occupied resources reduced after using pipeline strategy in the fully connected layer, maybe later should check whether the original result is corrrect or not.
+
+![](https://i.imgur.com/uJ23UQL.png)
