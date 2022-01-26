@@ -14,7 +14,7 @@
 
 ### Resources Usage
 
-The occupied resources reduced after using pipeline strategy in the fully connected layer.
+The occupied resources was reduced after using pipeline strategy in the fully connected layer.
 
 ![](https://i.imgur.com/uJ23UQL.png)
 
