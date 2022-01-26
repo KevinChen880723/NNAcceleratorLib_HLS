@@ -10,8 +10,18 @@
 
 # Performance After Changing
 
-## Use Pipeline Strategy In the Fully Connected Layer
+## Using Pipeline Strategy In the Fully Connected Layer
 
-For now, I'm not sure why does the occupied resources reduced after using pipeline strategy in the fully connected layer, maybe later should check whether the original result is corrrect or not.
+### Resources Usage
+
+The occupied resources reduced after using pipeline strategy in the fully connected layer.
 
 ![](https://i.imgur.com/uJ23UQL.png)
+
+### Inference Time
+
+Since using the same kernel may have different inference times in various iterations. To compare the inference time fairly, I compare the kernel by the average elapsed time from 100,000 times. From the following results, we know that the latency of the two different kernels is almost the same.
+- Pipelined fully connected layer: **1.46129232645034** mS
+- Original kernel: **1.4616054916381837** mS
+
+![](https://i.imgur.com/JsCTlow.png)
