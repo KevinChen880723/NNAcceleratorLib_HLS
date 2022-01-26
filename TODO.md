@@ -7,7 +7,3 @@
 # Current Performance
 
 ![](https://i.imgur.com/jTsfJki.png)
-
-:::info
-test
-:::
