@@ -14,13 +14,13 @@ namespace YKHLS{
 	{
 #pragma HLS interface ap_ctrl_none port=return
 		myDatatype feature[dim_input];
-//		#pragma HLS ARRAY_PARTITION variable=feature dim=0 block factor=8
+		#pragma HLS ARRAY_PARTITION variable=feature dim=0 block factor=4
 
 		for (int i = 0; i < dim_input; i++){
 			feature[i] = input_stream.read();
 		}
 		for (int col = 0; col < dim_output; col++){
-//		#pragma HLS PIPELINE II=1
+		#pragma HLS PIPELINE II=1
 			myDatatype sum = 0;
 			for (int row = 0; row < dim_input; row++){
 				if (row == 0) sum = Wconv[col][row] * feature[row];
