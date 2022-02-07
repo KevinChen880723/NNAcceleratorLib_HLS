@@ -1,11 +1,8 @@
-# HLS_MNIST
-
+# NNAcceleratorLib_HLS
 
 ## Introduction to the Project
 
-This is the hello world project to HLS; I implemented the MNIST inference device and deployed it on PYNQ-z2. In the project, I hand-crafted some core NN APIs: **Convolution**, **ReLU**, **Max-Pooling**, and **Fully connected** layers by HLS (High-Level Synthesis).
-
-## NN Architecture
+The project implements a library of some common neural network layers: **Convolution**, **ReLU**, **Max-Pooling**, and **Fully connected** layers. The library can construct the neural network accelerator on the `PYNQ-z2`. Besides, to validate the correctness of the library, the project implements a hello world model `MNIST` by this library. The experiment result shows that using the library can achieve **665 FPS** with the correct results!
 
 ![](https://i.imgur.com/uzVrweO.png)
 
