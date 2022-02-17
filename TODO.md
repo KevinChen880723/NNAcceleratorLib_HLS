@@ -25,7 +25,9 @@ Since using the same kernel may have different inference times in various iterat
 - Original kernel: **1.4616054916381837** mS
 
 ![](https://i.imgur.com/JsCTlow.png)
+![image](https://user-images.githubusercontent.com/55487740/154414382-7f7e0d9f-19a7-449e-8bdf-7a300a0418cc.png)
 
 ### Try to use the ping-pong buffer
 
 ![image](https://user-images.githubusercontent.com/55487740/154413855-f2063ee1-c1de-4fec-b8a2-7746fd7d75a2.png)
+![image](https://user-images.githubusercontent.com/55487740/154414778-29fff486-72a3-408f-a0ea-ee25e9d18c13.png)
